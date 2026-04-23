@@ -3,30 +3,30 @@ import React from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
 import { LoadingSpinner, InlineSpinner } from './components/LoadingSpinner';
 
-// Lazy load all page components
-const LoginPage = React.lazy(() => import('./pages/LoginPage'));
-const RegisterPage = React.lazy(() => import('./pages/RegisterPage'));
-const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
-const StudentDashboard = React.lazy(() => import('./pages/StudentDashboard'));
-const MentorDashboard = React.lazy(() => import('./pages/MentorDashboard'));
-const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-const StudentProjects = React.lazy(() => import('./pages/StudentProjects'));
-const StudentMentorship = React.lazy(() => import('./pages/StudentMentorship'));
-const StudentTrainings = React.lazy(() => import('./pages/StudentTrainings'));
-const StudentNotifications = React.lazy(() => import('./pages/StudentNotifications'));
-const StudentProfile = React.lazy(() => import('./pages/StudentProfile'));
-const StudentMaterial = React.lazy(() => import('./pages/StudentMaterial'));
-const MentorProjects = React.lazy(() => import('./pages/MentorProjects'));
-const MentorScheduling = React.lazy(() => import('./pages/MentorScheduling'));
-const MentorEvaluations = React.lazy(() => import('./pages/MentorEvaluations'));
-const MentorNotifications = React.lazy(() => import('./pages/MentorNotifications'));
-const MentorProfile = React.lazy(() => import('./pages/MentorProfile'));
-const AdminUsers = React.lazy(() => import('./pages/AdminUsers'));
-const AdminProjects = React.lazy(() => import('./pages/AdminProjects'));
-const AdminTrainings = React.lazy(() => import('./pages/AdminTrainings'));
-const AdminMaterial = React.lazy(() => import('./pages/AdminMaterial'));
-const AdminStatistics = React.lazy(() => import('./pages/AdminStatistics'));
-const AdminNotifications = React.lazy(() => import('./pages/AdminNotifications'));
+// Eagerly load all page components to avoid UI blinking on navigation
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import StudentDashboard from './pages/StudentDashboard';
+import MentorDashboard from './pages/MentorDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import StudentProjects from './pages/StudentProjects';
+import StudentMentorship from './pages/StudentMentorship';
+import StudentTrainings from './pages/StudentTrainings';
+import StudentNotifications from './pages/StudentNotifications';
+import StudentProfile from './pages/StudentProfile';
+import StudentMaterial from './pages/StudentMaterial';
+import MentorProjects from './pages/MentorProjects';
+import MentorScheduling from './pages/MentorScheduling';
+import MentorEvaluations from './pages/MentorEvaluations';
+import MentorNotifications from './pages/MentorNotifications';
+import MentorProfile from './pages/MentorProfile';
+import AdminUsers from './pages/AdminUsers';
+import AdminProjects from './pages/AdminProjects';
+import AdminTrainings from './pages/AdminTrainings';
+import AdminMaterial from './pages/AdminMaterial';
+import AdminStatistics from './pages/AdminStatistics';
+import AdminNotifications from './pages/AdminNotifications';
 
 // Fallback for public routes
 const FullPageLoader = <LoadingSpinner />;
@@ -37,8 +37,17 @@ const ContentLoader = <InlineSpinner />;
 const RootRedirect = () => {
   const savedUser = localStorage.getItem('currentUser');
   if (savedUser) {
-    const user = JSON.parse(savedUser);
-    return <Navigate to={`/${user.role}`} replace />;
+    try {
+      const user = JSON.parse(savedUser);
+      const validRoles = ['student', 'mentor', 'admin'];
+      if (user && user.role && validRoles.includes(user.role)) {
+        return <Navigate to={`/${user.role}`} replace />;
+      } else {
+        localStorage.removeItem('currentUser');
+      }
+    } catch (e) {
+      localStorage.removeItem('currentUser');
+    }
   }
   return <LoginPage />;
 };
@@ -51,52 +60,52 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <React.Suspense fallback={FullPageLoader}><LoginPage /></React.Suspense>,
+    element: <LoginPage />,
   },
   {
     path: '/register',
-    element: <React.Suspense fallback={FullPageLoader}><RegisterPage /></React.Suspense>,
+    element: <RegisterPage />,
   },
   {
     path: '/forgot-password',
-    element: <React.Suspense fallback={FullPageLoader}><ForgotPasswordPage /></React.Suspense>,
+    element: <ForgotPasswordPage />,
   },
   {
     path: '/student',
     element: <ProtectedRoute allowedRoles={['student']} />,
     children: [
-      { index: true, element: <React.Suspense fallback={null}><StudentDashboard /></React.Suspense> },
-      { path: 'projects', element: <React.Suspense fallback={ContentLoader}><StudentProjects /></React.Suspense> },
-      { path: 'mentorship', element: <React.Suspense fallback={ContentLoader}><StudentMentorship /></React.Suspense> },
-      { path: 'trainings', element: <React.Suspense fallback={ContentLoader}><StudentTrainings /></React.Suspense> },
-      { path: 'material', element: <React.Suspense fallback={ContentLoader}><StudentMaterial /></React.Suspense> },
-      { path: 'notifications', element: <React.Suspense fallback={ContentLoader}><StudentNotifications /></React.Suspense> },
-      { path: 'profile', element: <React.Suspense fallback={ContentLoader}><StudentProfile /></React.Suspense> },
+      { index: true, element: <StudentDashboard /> },
+      { path: 'projects', element: <StudentProjects /> },
+      { path: 'mentorship', element: <StudentMentorship /> },
+      { path: 'trainings', element: <StudentTrainings /> },
+      { path: 'material', element: <StudentMaterial /> },
+      { path: 'notifications', element: <StudentNotifications /> },
+      { path: 'profile', element: <StudentProfile /> },
     ],
   },
   {
     path: '/mentor',
     element: <ProtectedRoute allowedRoles={['mentor']} />,
     children: [
-      { index: true, element: <React.Suspense fallback={null}><MentorDashboard /></React.Suspense> },
-      { path: 'projects', element: <React.Suspense fallback={ContentLoader}><MentorProjects /></React.Suspense> },
-      { path: 'scheduling', element: <React.Suspense fallback={ContentLoader}><MentorScheduling /></React.Suspense> },
-      { path: 'evaluations', element: <React.Suspense fallback={ContentLoader}><MentorEvaluations /></React.Suspense> },
-      { path: 'notifications', element: <React.Suspense fallback={ContentLoader}><MentorNotifications /></React.Suspense> },
-      { path: 'profile', element: <React.Suspense fallback={ContentLoader}><MentorProfile /></React.Suspense> },
+      { index: true, element: <MentorDashboard /> },
+      { path: 'projects', element: <MentorProjects /> },
+      { path: 'scheduling', element: <MentorScheduling /> },
+      { path: 'evaluations', element: <MentorEvaluations /> },
+      { path: 'notifications', element: <MentorNotifications /> },
+      { path: 'profile', element: <MentorProfile /> },
     ],
   },
   {
     path: '/admin',
     element: <ProtectedRoute allowedRoles={['admin']} />,
     children: [
-      { index: true, element: <React.Suspense fallback={null}><AdminDashboard /></React.Suspense> },
-      { path: 'users', element: <React.Suspense fallback={ContentLoader}><AdminUsers /></React.Suspense> },
-      { path: 'projects', element: <React.Suspense fallback={ContentLoader}><AdminProjects /></React.Suspense> },
-      { path: 'trainings', element: <React.Suspense fallback={ContentLoader}><AdminTrainings /></React.Suspense> },
-      { path: 'material', element: <React.Suspense fallback={ContentLoader}><AdminMaterial /></React.Suspense> },
-      { path: 'statistics', element: <React.Suspense fallback={ContentLoader}><AdminStatistics /></React.Suspense> },
-      { path: 'notifications', element: <React.Suspense fallback={ContentLoader}><AdminNotifications /></React.Suspense> },
+      { index: true, element: <AdminDashboard /> },
+      { path: 'users', element: <AdminUsers /> },
+      { path: 'projects', element: <AdminProjects /> },
+      { path: 'trainings', element: <AdminTrainings /> },
+      { path: 'material', element: <AdminMaterial /> },
+      { path: 'statistics', element: <AdminStatistics /> },
+      { path: 'notifications', element: <AdminNotifications /> },
     ],
   },
   {

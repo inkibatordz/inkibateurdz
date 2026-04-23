@@ -229,9 +229,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
       </div>
     </div>
   );
-};
-
 });
+
 
 DashboardLayout.displayName = 'DashboardLayout';
 

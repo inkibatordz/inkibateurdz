@@ -23,6 +23,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithGoogle: (userData: Partial<User>) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   register: (userData: any) => Promise<{ success: boolean; message?: string }>;
   isAuthenticated: boolean;
@@ -85,6 +86,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('currentUser', JSON.stringify(foundUser));
     return { success: true };
   };
+  
+  const loginWithGoogle = async (googleData: Partial<User>): Promise<{ success: boolean; message?: string }> => {
+    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    let foundUser = users.find(u => u.email === googleData.email);
+
+    if (!foundUser) {
+      // Auto-register as student if not found
+      const newUser: User = {
+        id: `student-${Date.now()}`,
+        role: 'student',
+        email: googleData.email || '',
+        firstName: googleData.firstName || '',
+        lastName: googleData.lastName || '',
+        approved: false // Still needs approval
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      return { 
+        success: false, 
+        message: 'Compte créé via Google. En attente de l\'approbation de l\'administrateur.' 
+      };
+    }
+
+    if (!foundUser.approved) {
+      return {
+        success: false,
+        message: 'Compte non activé – veuillez attendre l\'approbation de l\'administrateur'
+      };
+    }
+
+    setUser(foundUser);
+    localStorage.setItem('currentUser', JSON.stringify(foundUser));
+    return { success: true };
+  };
 
   const logout = () => {
     setUser(null);
@@ -133,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = React.useMemo(() => ({
     user,
     login,
+    loginWithGoogle,
     logout,
     register,
     isAuthenticated: !!user
