@@ -14,7 +14,8 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  Package
+  Package,
+  Newspaper
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -52,8 +53,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
       return [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/mentor' },
         { icon: FolderKanban, label: 'Projets assignés', path: '/mentor/projects' },
-        { icon: Calendar, label: 'Planification', path: '/mentor/scheduling' },
-        { icon: BarChart3, label: 'Évaluations', path: '/mentor/evaluations' },
+        { icon: Users, label: 'Mentorat', path: '/mentor/mentorship' },
         { icon: Bell, label: 'Notifications', path: '/mentor/notifications', badge: 2 },
         { icon: User, label: 'Profil', path: '/mentor/profile' },
       ];
@@ -65,6 +65,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         { icon: GraduationCap, label: 'Formations', path: '/admin/trainings' },
         { icon: Package, label: 'Matériel', path: '/admin/material' },
         { icon: BarChart3, label: 'Statistiques', path: '/admin/statistics' },
+        { icon: Newspaper, label: 'Actualités', path: '/admin/news' },
         { icon: Bell, label: 'Notifications', path: '/admin/notifications', badge: 5 },
       ];
     }
@@ -180,13 +181,57 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              {getNotificationCount() > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-              )}
-            </Button>
+            {/* Notifications Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {getNotificationCount() > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Notifications</span>
+                  <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-0">{getNotificationCount()} nouvelles</Badge>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="max-h-80 overflow-y-auto">
+                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b bg-blue-50/50">
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm font-medium text-gray-900">Bienvenue sur l'Incubateur !</p>
+                      <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Complétez votre profil pour commencer.</p>
+                    <p className="text-xs text-blue-600 mt-2 font-medium">À l'instant</p>
+                  </div>
+                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b bg-blue-50/50">
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm font-medium text-gray-900">Nouveau document</p>
+                      <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Un nouveau modèle de cahier des charges est disponible.</p>
+                    <p className="text-xs text-blue-600 mt-2 font-medium">Il y a 2 heures</p>
+                  </div>
+                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b">
+                    <p className="text-sm font-medium text-gray-900">Rappel de formation</p>
+                    <p className="text-xs text-gray-500 mt-1">N'oubliez pas la session de Business Model Canvas demain.</p>
+                    <p className="text-xs text-gray-400 mt-2">Hier</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-center justify-center text-blue-600 cursor-pointer font-medium"
+                  onClick={() => {
+                    const path = navItems.find(i => i.label === 'Notifications')?.path;
+                    if (path) navigate(path);
+                  }}
+                >
+                  Voir toutes les notifications
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User Menu */}
             <DropdownMenu>

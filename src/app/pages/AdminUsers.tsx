@@ -125,20 +125,24 @@ const AdminUsers: React.FC = () => {
       return;
     }
 
+    const newMentorId = `mentor-${Date.now()}`;
     const newMentor: User = {
-      id: `mentor-${Date.now()}`,
+      id: newMentorId,
       role: 'mentor',
       firstName: mentorData.firstName,
       lastName: mentorData.lastName,
       email: mentorData.email,
-      password: mentorData.password,
       department: mentorData.department,
       staffId: mentorData.staffId,
       approved: true // Mentors created by admin are automatically approved
-    };
+    } as User;
 
     allUsers.push(newMentor);
     localStorage.setItem('users', JSON.stringify(allUsers));
+
+    const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
+    passwords.push({ userId: newMentorId, password: mentorData.password });
+    localStorage.setItem('passwords', JSON.stringify(passwords));
     
     setIsMentorDialogOpen(false);
     setMentorData({ firstName: '', lastName: '', email: '', password: '', department: '', staffId: '' });

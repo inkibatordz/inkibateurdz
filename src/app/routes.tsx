@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { LoadingSpinner, InlineSpinner } from './components/LoadingSpinner';
 
 // Eagerly load all page components to avoid UI blinking on navigation
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -20,8 +21,10 @@ import MentorProjects from './pages/MentorProjects';
 import MentorScheduling from './pages/MentorScheduling';
 import MentorEvaluations from './pages/MentorEvaluations';
 import MentorNotifications from './pages/MentorNotifications';
+import MentorMentorship from './pages/MentorMentorship';
 import MentorProfile from './pages/MentorProfile';
 import AdminUsers from './pages/AdminUsers';
+import AdminNews from './pages/AdminNews';
 import AdminProjects from './pages/AdminProjects';
 import AdminTrainings from './pages/AdminTrainings';
 import AdminMaterial from './pages/AdminMaterial';
@@ -49,7 +52,7 @@ const RootRedirect = () => {
       localStorage.removeItem('currentUser');
     }
   }
-  return <LoginPage />;
+  return <LandingPage />;
 };
 
 export const router = createBrowserRouter([
@@ -90,6 +93,7 @@ export const router = createBrowserRouter([
       { index: true, element: <MentorDashboard /> },
       { path: 'projects', element: <MentorProjects /> },
       { path: 'scheduling', element: <MentorScheduling /> },
+      { path: 'mentorship', element: <MentorMentorship /> },
       { path: 'evaluations', element: <MentorEvaluations /> },
       { path: 'notifications', element: <MentorNotifications /> },
       { path: 'profile', element: <MentorProfile /> },
@@ -105,6 +109,7 @@ export const router = createBrowserRouter([
       { path: 'trainings', element: <AdminTrainings /> },
       { path: 'material', element: <AdminMaterial /> },
       { path: 'statistics', element: <AdminStatistics /> },
+      { path: 'news', element: <AdminNews /> },
       { path: 'notifications', element: <AdminNotifications /> },
     ],
   },

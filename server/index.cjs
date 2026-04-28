@@ -15,8 +15,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Mock database for OTPs (In a real app, use Redis or a DB)
+// Mock database for OTPs and News
 const otpStore = new Map();
+const newsStore = new Map();
 
 app.post('/api/send-otp', async (req, res) => {
   const { email } = req.body;
@@ -78,6 +79,39 @@ app.post('/api/verify-otp', (req, res) => {
     res.status(400).json({ success: false, message: 'Code incorrect' });
   }
 });
+
+// --- News API ---
+app.get('/api/news', (req, res) => {
+  const news = Array.from(newsStore.values()).sort((a, b) => b.id - a.id);
+  res.json({ success: true, news });
+});
+
+app.post('/api/news', (req, res) => {
+  console.log('--- NEW NEWS ITEM ATTEMPT ---');
+  console.log('Data received:', req.body);
+  try {
+    const { title, content, type, date, imageUrl } = req.body;
+    const id = Date.now();
+    const newItem = { id, title, content, type, date: date || new Date().toISOString(), imageUrl };
+    newsStore.set(id, newItem);
+    console.log('News item saved successfully');
+    res.json({ success: true, news: newItem });
+  } catch (err) {
+    console.error('SERVER ERROR IN POST NEWS:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/news/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  if (newsStore.has(id)) {
+    newsStore.delete(id);
+    res.json({ success: true, message: 'Article supprimé' });
+  } else {
+    res.status(404).json({ success: false, message: 'Article non trouvé' });
+  }
+});
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

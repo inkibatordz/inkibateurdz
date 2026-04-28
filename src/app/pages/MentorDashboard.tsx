@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 import KPICard from '../components/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -156,36 +157,6 @@ const MentorDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Planifier une séance</h3>
-                  <p className="text-sm text-gray-600">Organisez un mentorat avec un étudiant</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <Star className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Évaluer un projet</h3>
-                  <p className="text-sm text-gray-600">Donnez votre feedback et notes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
   );
 };
