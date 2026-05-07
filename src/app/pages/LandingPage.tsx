@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Logo from '../components/Logo';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -66,12 +67,10 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3 group cursor-pointer"
           >
-            <div className="bg-blue-600 p-2.5 rounded-2xl shadow-lg shadow-blue-200 group-hover:rotate-12 transition-transform duration-300">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
+            <Logo className="w-12 h-12 group-hover:rotate-12 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="text-xl font-black text-gray-900 tracking-tight leading-none">INCUBATEUR</span>
-              <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em]">UNIVERSITAIRE DZ</span>
+              <span className="text-xl font-black text-gray-900 tracking-tight leading-none">2TI</span>
+              <span className="text-[10px] font-bold text-teal-600 tracking-[0.2em]">TLEMCEN TECH INCUBATOR</span>
             </div>
           </motion.div>
 
@@ -304,10 +303,8 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-3 mb-8">
-                <div className="bg-blue-600 p-2 rounded-xl">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-black tracking-tighter">INCUBATEUR DZ</span>
+                <Logo className="w-10 h-10" />
+                <span className="text-xl font-black tracking-tighter">2TI TLEMCEN</span>
               </div>
               <p className="text-gray-500 font-medium leading-relaxed mb-8">
                 L'excellence technologique au service de l'innovation algérienne.
@@ -353,7 +350,7 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="pt-12 border-t border-white/5 text-center flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-gray-600 font-bold text-sm">© 2026 Incubateur DZ. Designed for Excellence.</p>
+            <p className="text-gray-600 font-bold text-sm">© 2026 2TI - Tlemcen Tech Incubator. Designed for Excellence.</p>
             <div className="flex items-center gap-2 text-gray-600">
               <Globe className="w-4 h-4" />
               <span className="text-sm font-bold uppercase tracking-widest">Algeria, Global Vision</span>

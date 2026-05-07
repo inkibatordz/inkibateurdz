@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -171,11 +172,11 @@ const RegisterPage: React.FC = () => {
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <GraduationCap className="w-9 h-9 text-white" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <Logo className="w-20 h-20" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer un compte</h1>
-          <p className="text-gray-600">Rejoignez l'incubateur universitaire</p>
+          <p className="text-gray-600">Rejoignez Tlemcen Tech Incubator (2TI)</p>
         </div>
 
         {/* Step indicator */}
