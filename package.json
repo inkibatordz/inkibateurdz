@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "npx concurrently \"vite --host --open\" \"node server/index.cjs\""
+    "dev": "npx concurrently \"vite --host --open\" \"node server/index.cjs\"",
+    "start": "node server/index.cjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
