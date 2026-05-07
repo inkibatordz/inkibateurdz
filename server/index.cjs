@@ -15,12 +15,16 @@ app.use(express.static(path.join(__dirname, '../dist')));
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // Use SSL
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
+
+console.log('Email Configuration Check:');
+console.log('- EMAIL_USER:', process.env.EMAIL_USER ? 'DEFINED' : 'MISSING');
+console.log('- EMAIL_PASS:', process.env.EMAIL_PASS ? 'DEFINED' : 'MISSING');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -142,6 +146,14 @@ app.post('/api/send-otp', async (req, res) => {
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expires = Date.now() + 10 * 60 * 1000;
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('Email variables are missing in /api/send-otp');
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Erreur Configuration : EMAIL_USER ou EMAIL_PASS manquant sur Render.' 
+    });
+  }
 
   try {
     await pool.query(
