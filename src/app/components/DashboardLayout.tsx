@@ -100,7 +100,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
     navigate('/login', { replace: true });
   };
 
-  return (
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white">
       {/* Logo */}
