@@ -145,11 +145,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center justify-between px-2 mb-3">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <Avatar>
-              <AvatarFallback className="bg-blue-600 text-white">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
+              <Avatar>
+                <AvatarFallback className="bg-blue-600 text-white">
+                  {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {user?.firstName} {user?.lastName}
@@ -267,7 +267,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
                 <Button variant="ghost" className="flex items-center space-x-2">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-blue-600 text-white text-xs">
-                      {getInitials()}
+                      {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

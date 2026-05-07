@@ -294,7 +294,7 @@ app.post('/api/login', async (req, res) => {
   if (email === 'admin' && password === 'admin') {
     return res.json({ 
       success: true, 
-      user: { id: 'admin', email: 'admin', role: 'admin', first_name: 'Admin', last_name: 'System' } 
+      user: { id: 'admin', email: 'admin', role: 'admin', firstName: 'Admin', lastName: 'System' } 
     });
   }
 
