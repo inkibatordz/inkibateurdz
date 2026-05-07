@@ -6,14 +6,14 @@ services:
     startCommand: node server/index.cjs
     envVars:
       - key: NODE_VERSION
-        value: 20
+        value: "20"
       - key: PORT
-        value: 10000
+        value: "10000"
       - key: DATABASE_URL
-        fromConfigVar: DATABASE_URL
+        sync: false
       - key: EMAIL_USER
-        fromConfigVar: EMAIL_USER
+        sync: false
       - key: EMAIL_PASS
-        fromConfigVar: EMAIL_PASS
+        sync: false
       - key: VITE_GOOGLE_CLIENT_ID
-        fromConfigVar: VITE_GOOGLE_CLIENT_ID
+        sync: false
