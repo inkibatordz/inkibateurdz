@@ -294,6 +294,51 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// --- Users Management API (Admin only) ---
+app.get('/api/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
+    const users = result.rows.map(user => ({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      department: user.department,
+      level: user.level,
+      studentId: user.student_id,
+      status: user.status || 'pending',
+      approved: user.status === 'approved'
+    }));
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+app.put('/api/users/:id/approve', async (req, res) => {
+  const id = req.params.id;
+  try {
+    await pool.query('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error approving user:', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -335,7 +380,14 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/projects', async (req, res) => {
   const { studentId, mentorId } = req.query;
   try {
-    let query = 'SELECT p.*, u.first_name as student_first_name, u.last_name as student_last_name FROM projects p JOIN users u ON p.student_id = u.id';
+    let query = `
+      SELECT p.*, 
+             u.first_name as student_first_name, u.last_name as student_last_name,
+             m.first_name as mentor_first_name, m.last_name as mentor_last_name
+      FROM projects p 
+      JOIN users u ON p.student_id = u.id
+      LEFT JOIN users m ON p.mentor_id = m.id
+    `;
     let params = [];
     
     if (studentId) {
@@ -348,9 +400,16 @@ app.get('/api/projects', async (req, res) => {
     
     const result = await pool.query(query, params);
     const projects = result.rows.map(p => ({
-      ...p,
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      status: p.status,
+      studentId: p.student_id,
+      mentorId: p.mentor_id,
       studentName: `${p.student_first_name} ${p.student_last_name}`,
-      submittedDate: p.submitted_date
+      mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
+      submittedDate: p.submitted_date,
+      fileCtt: p.file_ctt
     }));
     res.json({ success: true, projects });
   } catch (err) {
@@ -363,13 +422,37 @@ app.post('/api/projects', async (req, res) => {
   const { id, title, description, studentId } = req.body;
   try {
     await pool.query(
-      'INSERT INTO projects (id, title, description, student_id, submitted_date) VALUES ($1, $2, $3, $4, $5)',
-      [id || `proj-${Date.now()}`, title, description, studentId, new Date().toISOString()]
+      'INSERT INTO projects (id, title, description, student_id, submitted_date, status) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id || `proj-${Date.now()}`, title, description, studentId, new Date().toISOString(), 'pending']
     );
     res.json({ success: true });
   } catch (err) {
     console.error('Error adding project:', err);
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/projects/:id/status', async (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body;
+  try {
+    await pool.query('UPDATE projects SET status = $1 WHERE id = $2', [status, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating project status:', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+app.put('/api/projects/:id/assign-mentor', async (req, res) => {
+  const id = req.params.id;
+  const { mentorId } = req.body;
+  try {
+    await pool.query('UPDATE projects SET mentor_id = $1, status = $2 WHERE id = $3', [mentorId, 'accepted', id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error assigning mentor:', err);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 

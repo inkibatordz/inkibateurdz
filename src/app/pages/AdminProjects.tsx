@@ -53,18 +53,33 @@ const AdminProjects: React.FC = () => {
     loadMentors();
   }, []);
 
-  const loadMentors = () => {
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    setMentors(allUsers.filter((u: any) => u.role === 'mentor'));
+  const loadMentors = async () => {
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      if (data.success) {
+        setMentors(data.users.filter((u: any) => u.role === 'mentor'));
+      }
+    } catch (error) {
+      console.error('Error loading mentors:', error);
+    }
   };
 
   useEffect(() => {
     filterProjects();
   }, [searchTerm, filterStatus, projects]);
 
-  const loadProjects = () => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(allProjects);
+  const loadProjects = async () => {
+    try {
+      const res = await fetch('/api/projects');
+      const data = await res.json();
+      if (data.success) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast.error('Erreur lors du chargement des projets');
+    }
   };
 
   const filterProjects = () => {
@@ -83,24 +98,38 @@ const AdminProjects: React.FC = () => {
     setFilteredProjects(filtered);
   };
 
-  const handleStatusChange = (projectId: string, newStatus: 'accepted' | 'incubation' | 'rejected') => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const updatedProjects = allProjects.map((p: Project) => 
-      p.id === projectId ? { ...p, status: newStatus } : p
-    );
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    loadProjects();
-    toast.success(`Projet ${newStatus === 'accepted' ? 'accepté' : newStatus === 'rejected' ? 'rejeté' : 'mis en incubation'}`);
+  const handleStatusChange = async (projectId: string, newStatus: 'accepted' | 'incubation' | 'rejected') => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadProjects();
+        toast.success(`Projet ${newStatus === 'accepted' ? 'accepté' : newStatus === 'rejected' ? 'rejeté' : 'mis en incubation'}`);
+      }
+    } catch (error) {
+      toast.error('Erreur lors du changement de statut');
+    }
   };
 
-  const handleAssignMentor = (projectId: string, mentorId: string) => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const updatedProjects = allProjects.map((p: Project) => 
-      p.id === projectId ? { ...p, status: 'accepted', mentorId } : p
-    );
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    loadProjects();
-    toast.success(`Mentor assigné et projet accepté`);
+  const handleAssignMentor = async (projectId: string, mentorId: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/assign-mentor`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mentorId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadProjects();
+        toast.success(`Mentor assigné et projet accepté`);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de l\'assignation du mentor');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -121,18 +150,6 @@ const AdminProjects: React.FC = () => {
       case 'rejected': return 'Rejeté';
       default: return status;
     }
-  };
-
-  const getStudentName = (studentId: string) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const student = users.find((u: any) => u.id === studentId);
-    return student ? `${student.firstName} ${student.lastName}` : 'Inconnu';
-  };
-
-  const getMentorName = (mentorId?: string) => {
-    if (!mentorId) return 'Non assigné';
-    const mentor = mentors.find(m => m.id === mentorId);
-    return mentor ? `${mentor.firstName} ${mentor.lastName}` : 'Inconnu';
   };
 
   const pendingCount = projects.filter(p => p.status === 'pending').length;
@@ -263,7 +280,7 @@ const AdminProjects: React.FC = () => {
                             </Badge>
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <span>Par {getStudentName(project.studentId)}</span>
+                            <span>Par {project.studentName}</span>
                             <span>•</span>
                             <span>Soumis le {new Date(project.submittedDate).toLocaleDateString('fr-FR')}</span>
                           </div>
@@ -333,12 +350,12 @@ const AdminProjects: React.FC = () => {
             <div className="space-y-6 mt-4">
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Étudiant</h4>
-                <p className="text-gray-600">{getStudentName(selectedProject.studentId)}</p>
+                <p className="text-gray-600">{selectedProject.studentName}</p>
               </div>
 
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Mentor Assigné</h4>
-                <p className="text-gray-600">{getMentorName(selectedProject.mentorId)}</p>
+                <p className="text-gray-600">{selectedProject.mentorName}</p>
               </div>
 
               {selectedProject.fileCtt && (

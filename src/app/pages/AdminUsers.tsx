@@ -51,11 +51,19 @@ const AdminUsers: React.FC = () => {
     filterUsers();
   }, [searchTerm, filterRole, filterStatus, users]);
 
-  const loadUsers = () => {
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    // Exclude admin from the list
-    const nonAdminUsers = allUsers.filter((u: User) => u.role !== 'admin');
-    setUsers(nonAdminUsers);
+  const loadUsers = async () => {
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      if (data.success) {
+        // Exclude admin from the list
+        const nonAdminUsers = data.users.filter((u: User) => u.role !== 'admin');
+        setUsers(nonAdminUsers);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Erreur lors du chargement des utilisateurs');
+    }
   };
 
   const filterUsers = () => {
@@ -84,70 +92,63 @@ const AdminUsers: React.FC = () => {
     setFilteredUsers(filtered);
   };
 
-  const handleApprove = (userId: string) => {
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = allUsers.map((u: User) => 
-      u.id === userId ? { ...u, approved: true } : u
-    );
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    loadUsers();
-    toast.success('Utilisateur approuvé avec succès');
+  const handleApprove = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/users/${userId}/approve`, { method: 'PUT' });
+      const data = await res.json();
+      if (data.success) {
+        loadUsers();
+        toast.success('Utilisateur approuvé avec succès');
+      }
+    } catch (error) {
+      toast.error('Erreur lors de l\'approbation');
+    }
   };
 
-  const handleReject = (userId: string) => {
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = allUsers.filter((u: User) => u.id !== userId);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    loadUsers();
-    toast.success('Utilisateur rejeté');
+  const handleReject = async (userId: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        loadUsers();
+        toast.success('Utilisateur supprimé');
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
-  const handleDeactivate = (userId: string) => {
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = allUsers.map((u: User) => 
-      u.id === userId ? { ...u, approved: false } : u
-    );
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    loadUsers();
-    toast.success('Compte désactivé');
+  const handleDeactivate = async (userId: string) => {
+    // For now, deactivation is just setting status back to pending or similar
+    // We can reuse a general update status endpoint if needed
+    toast.info('Fonctionnalité de désactivation en cours de développement');
   };
 
-  const handleCreateMentor = (e: React.FormEvent) => {
+  const handleCreateMentor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mentorData.password.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères');
-      return;
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...mentorData,
+          role: 'mentor',
+          status: 'approved' // Mentors created by admin are automatically approved
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsMentorDialogOpen(false);
+        setMentorData({ firstName: '', lastName: '', email: '', password: '', department: '', staffId: '' });
+        loadUsers();
+        toast.success('Compte mentor créé avec succès');
+      } else {
+        toast.error(data.message || 'Erreur lors de la création');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
     }
-
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    if (allUsers.some((u: User) => u.email === mentorData.email)) {
-      toast.error('Cet email est déjà utilisé');
-      return;
-    }
-
-    const newMentorId = `mentor-${Date.now()}`;
-    const newMentor: User = {
-      id: newMentorId,
-      role: 'mentor',
-      firstName: mentorData.firstName,
-      lastName: mentorData.lastName,
-      email: mentorData.email,
-      department: mentorData.department,
-      staffId: mentorData.staffId,
-      approved: true // Mentors created by admin are automatically approved
-    } as User;
-
-    allUsers.push(newMentor);
-    localStorage.setItem('users', JSON.stringify(allUsers));
-
-    const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
-    passwords.push({ userId: newMentorId, password: mentorData.password });
-    localStorage.setItem('passwords', JSON.stringify(passwords));
-    
-    setIsMentorDialogOpen(false);
-    setMentorData({ firstName: '', lastName: '', email: '', password: '', department: '', staffId: '' });
-    loadUsers();
-    toast.success('Compte mentor créé avec succès');
   };
 
   const getRoleBadgeColor = (role: string) => {
