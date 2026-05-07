@@ -73,9 +73,25 @@ const initDb = async () => {
         department TEXT,
         level TEXT,
         student_id TEXT,
-        approved BOOLEAN DEFAULT TRUE
+        approved BOOLEAN DEFAULT TRUE,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Migrations for existing users table
+    await pool.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='status') THEN
+          ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'pending';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='created_at') THEN
+          ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        END IF;
+      END $$;
+    `);
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY,
@@ -84,8 +100,19 @@ const initDb = async () => {
         student_id TEXT NOT NULL REFERENCES users(id),
         mentor_id TEXT REFERENCES users(id),
         status TEXT NOT NULL DEFAULT 'pending',
-        submitted_date TEXT NOT NULL
+        submitted_date TEXT NOT NULL,
+        file_ctt TEXT
       );
+    `);
+
+    // Migrations for existing projects table
+    await pool.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='file_ctt') THEN
+          ALTER TABLE projects ADD COLUMN file_ctt TEXT;
+        END IF;
+      END $$;
     `);
 
     // Add default admin if no users exist
