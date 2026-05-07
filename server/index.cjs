@@ -145,7 +145,10 @@ app.post('/api/send-otp', async (req, res) => {
     res.json({ success: true, message: 'OTP envoyé avec succès' });
   } catch (error) {
     console.error('Error sending email:', error);
-    res.status(500).json({ success: false, message: 'Erreur lors de l\'envoi de l\'e-mail' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur lors de l\'envoi de l\'e-mail. Vérifiez vos variables d\'environnement EMAIL_USER et EMAIL_PASS (Mot de passe d\'application Google requis).' 
+    });
   }
 });
 
