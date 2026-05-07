@@ -206,8 +206,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
               })}
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
             {/* Notifications Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
