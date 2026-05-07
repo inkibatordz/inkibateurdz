@@ -9,7 +9,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"}>
+    <GoogleOAuthProvider clientId="762821168875-9v5umvlk99gii0pa01vqhrjovcagrjdl.apps.googleusercontent.com">
       <React.Suspense fallback={<LoadingSpinner />}>
         <AuthProvider>
           <RouterProvider router={router} />
