@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "npx concurrently \"vite --open\" \"node server/index.cjs\""
+    "dev": "npx concurrently \"vite --host --open\" \"node server/index.cjs\""
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -54,6 +54,7 @@
     "motion": "12.23.24",
     "next-themes": "0.4.6",
     "nodemailer": "^8.0.5",
+    "pg": "^8.20.0",
     "react": "^18.3.1",
     "react-day-picker": "8.10.1",
     "react-dnd": "16.0.1",

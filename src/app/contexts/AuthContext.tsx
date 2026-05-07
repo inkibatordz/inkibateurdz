@@ -58,114 +58,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
-
-    // For admin, check username
-    let foundUser = users.find(u =>
-      u.role === 'admin' ? u.username === email : u.email === email
-    );
-
-    if (!foundUser) {
-      return { success: false, message: 'Email ou mot de passe incorrect' };
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || 'Email ou mot de passe incorrect' };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, message: 'Erreur de connexion au serveur' };
     }
-
-    const passwordEntry = passwords.find((p: any) => p.userId === foundUser!.id);
-    if (!passwordEntry || passwordEntry.password !== password) {
-      return { success: false, message: 'Email ou mot de passe incorrect' };
-    }
-
-    if (!foundUser.approved) {
-      return {
-        success: false,
-        message: 'Compte non activé – veuillez attendre l\'approbation de l\'administrateur'
-      };
-    }
-
-    setUser(foundUser);
-    localStorage.setItem('currentUser', JSON.stringify(foundUser));
-    return { success: true };
   };
   
   const loginWithGoogle = async (googleData: Partial<User>): Promise<{ success: boolean; message?: string }> => {
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    let foundUser = users.find(u => u.email === googleData.email);
-
-    if (!foundUser) {
-      // Auto-register as student if not found
-      const newUser: User = {
-        id: `student-${Date.now()}`,
-        role: 'student',
-        email: googleData.email || '',
-        firstName: googleData.firstName || '',
-        lastName: googleData.lastName || '',
-        approved: false // Still needs approval
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      return { 
-        success: false, 
-        message: 'Compte créé via Google. En attente de l\'approbation de l\'administrateur.' 
-      };
+    // For simplicity, we'll try to register/login via a dedicated google endpoint or just reuse register
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: googleData.email, isGoogle: true }), // Server needs to handle this
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        return { success: true };
+      } else {
+        // Auto register if not found
+        const registerRes = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: googleData.email,
+            firstName: googleData.firstName,
+            lastName: googleData.lastName,
+            role: 'student',
+            password: 'google-auth-no-password'
+          }),
+        });
+        const registerData = await registerRes.json();
+        if (registerData.success) {
+           return { success: false, message: 'Compte créé via Google. Vous pouvez maintenant vous connecter.' };
+        }
+        return { success: false, message: 'Erreur lors de la connexion Google' };
+      }
+    } catch (error) {
+      return { success: false, message: 'Erreur serveur' };
     }
-
-    if (!foundUser.approved) {
-      return {
-        success: false,
-        message: 'Compte non activé – veuillez attendre l\'approbation de l\'administrateur'
-      };
-    }
-
-    setUser(foundUser);
-    localStorage.setItem('currentUser', JSON.stringify(foundUser));
-    return { success: true };
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
-    // Navigation will be handled by the component calling logout
   };
 
   const register = async (userData: any): Promise<{ success: boolean; message?: string }> => {
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    const passwords = JSON.parse(localStorage.getItem('passwords') || '[]');
-
-    // Check if email already exists
-    const emailExists = users.some(u => u.email === userData.email);
-    if (emailExists) {
-      return { success: false, message: 'Cet email est déjà utilisé' };
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        return { success: true, message: 'Inscription réussie !' };
+      } else {
+        return { success: false, message: data.message || 'Erreur lors de l\'inscription' };
+      }
+    } catch (error) {
+      return { success: false, message: 'Erreur de connexion au serveur' };
     }
-
-    const newUser: User = {
-      id: `${userData.role}-${Date.now()}`,
-      role: userData.role,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      approved: false,
-      ...(userData.role === 'student' && {
-        university: userData.university,
-        department: userData.department,
-        level: userData.level,
-        studentId: userData.studentId
-      }),
-      ...(userData.role === 'mentor' && {
-        department: userData.department,
-        staffId: userData.staffId
-      })
-    };
-
-    users.push(newUser);
-    passwords.push({ userId: newUser.id, password: userData.password });
-
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('passwords', JSON.stringify(passwords));
-
-    return { success: true, message: 'Inscription réussie ! En attente de l\'approbation de l\'administrateur.' };
   };
 
   const value = React.useMemo(() => ({

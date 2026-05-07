@@ -19,7 +19,7 @@ import {
   Instagram,
   Linkedin
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NewsItem {
   id: number;
@@ -38,7 +38,7 @@ const LandingPage: React.FC = () => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     
-    fetch('http://localhost:3001/api/news')
+    fetch('/api/news')
       .then(res => res.json())
       .then(data => {
         if (data.success) setNews(data.news);

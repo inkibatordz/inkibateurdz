@@ -28,24 +28,20 @@ const MentorDashboard: React.FC = () => {
   const [projects, setProjects] = useState<AssignedProject[]>([]);
 
   useEffect(() => {
-    // Load real assigned projects from localStorage
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    const assignedProjects = allProjects
-      .filter((p: any) => p.mentorId === user?.id)
-      .map((p: any) => {
-        const student = allUsers.find((u: any) => u.id === p.studentId);
-        return {
-          id: p.id,
-          title: p.title,
-          studentName: student ? `${student.firstName} ${student.lastName}` : 'Inconnu',
-          status: p.status,
-          assignedDate: p.submittedDate, // or add a field for when it was assigned
-        };
-      });
-      
-    setProjects(assignedProjects);
+    const fetchAssignedProjects = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch(`/api/projects?mentorId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setProjects(data.projects);
+        }
+      } catch (error) {
+        console.error('Error fetching mentor projects:', error);
+      }
+    };
+
+    fetchAssignedProjects();
   }, [user]);
 
   const getStatusColor = (status: string) => {

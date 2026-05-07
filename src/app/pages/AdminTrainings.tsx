@@ -19,6 +19,8 @@ interface Formation {
   availableSpots: number;
 }
 
+const BASE_URL = '';
+
 const AdminTrainings: React.FC = () => {
   const [formations, setFormations] = useState<Formation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,43 +39,65 @@ const AdminTrainings: React.FC = () => {
     loadFormations();
   }, []);
 
-  const loadFormations = () => {
-    const storedFormations = JSON.parse(localStorage.getItem('formations') || '[]');
-    setFormations(storedFormations);
+  const loadFormations = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/trainings`);
+      const data = await res.json();
+      if (data.success) {
+        setFormations(data.trainings);
+      }
+    } catch (error) {
+      console.error('Error fetching formations:', error);
+      toast.error('Erreur lors du chargement des formations');
+    }
   };
 
-  const handleAddFormation = (e: React.FormEvent) => {
+  const handleAddFormation = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newFormation: Formation = {
+    const newFormation = {
       id: `form-${Date.now()}`,
-      title: formData.title,
-      description: formData.description,
-      date: formData.date,
-      time: formData.time,
-      location: formData.location,
-      instructor: formData.instructor,
-      totalSpots: formData.totalSpots,
-      availableSpots: formData.totalSpots
+      ...formData
     };
 
-    const updatedFormations = [...formations, newFormation];
-    localStorage.setItem('formations', JSON.stringify(updatedFormations));
-    setFormations(updatedFormations);
-    setIsDialogOpen(false);
-    
-    // Reset form
-    setFormData({
-      title: '', description: '', date: '', time: '', location: '', instructor: '', totalSpots: 30
-    });
-    
-    toast.success('Formation ajoutée avec succès');
+    try {
+      const res = await fetch(`${BASE_URL}/api/trainings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newFormation),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Formation ajoutée avec succès');
+        setIsDialogOpen(false);
+        setFormData({
+          title: '', description: '', date: '', time: '', location: '', instructor: '', totalSpots: 30
+        });
+        loadFormations();
+      } else {
+        toast.error(data.message || 'Erreur lors de l\'ajout');
+      }
+    } catch (error) {
+      console.error('Error adding formation:', error);
+      toast.error('Erreur serveur');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    const updatedFormations = formations.filter(f => f.id !== id);
-    localStorage.setItem('formations', JSON.stringify(updatedFormations));
-    setFormations(updatedFormations);
-    toast.success('Formation supprimée');
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cette formation ?')) return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/trainings/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Formation supprimée');
+        loadFormations();
+      }
+    } catch (error) {
+      console.error('Error deleting formation:', error);
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
   const handleSendNotification = (title: string) => {

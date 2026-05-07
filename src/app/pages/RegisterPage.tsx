@@ -10,7 +10,7 @@ import { GraduationCap, AlertCircle, CheckCircle2, Mail, Shield } from 'lucide-r
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { useGoogleLogin } from '@react-oauth/google';
 
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = '';
 
 const RegisterPage: React.FC = () => {
   const [step, setStep] = useState<'form' | 'verify'>('form');

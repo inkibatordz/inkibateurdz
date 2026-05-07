@@ -49,48 +49,35 @@ const StudentDashboard: React.FC = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
 
   useEffect(() => {
-    // Load student projects
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const userProjects = allProjects.filter((p: any) => p.studentId === user?.id);
-    setProjects(userProjects);
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        // Fetch student projects
+        const projRes = await fetch(`/api/projects?studentId=${user.id}`);
+        const projData = await projRes.json();
+        if (projData.success) setProjects(projData.projects);
 
-    // Mock upcoming mentorship session
-    setUpcomingSession({
-      id: '1',
-      mentorName: 'Dr. Sarah Martin',
-      date: '2026-02-25',
-      time: '14:00',
-      location: 'Salle Innovation A',
-      topic: 'Validation du Business Model'
-    });
+        // Fetch trainings
+        const trainRes = await fetch(`/api/trainings`);
+        const trainData = await trainRes.json();
+        if (trainData.success) setTrainings(trainData.trainings);
 
-    // Mock trainings
-    setTrainings([
-      {
-        id: '1',
-        title: 'Pitch Perfect: Comment convaincre les investisseurs',
-        date: '2026-03-01',
-        time: '10:00 - 12:00',
-        instructor: 'Jean Dupont',
-        spots: 15
-      },
-      {
-        id: '2',
-        title: 'Marketing Digital pour Startups',
-        date: '2026-03-05',
-        time: '14:00 - 17:00',
-        instructor: 'Marie Lambert',
-        spots: 8
-      },
-      {
-        id: '3',
-        title: 'Finances et Levée de Fonds',
-        date: '2026-03-10',
-        time: '09:00 - 12:00',
-        instructor: 'Pierre Rousseau',
-        spots: 12
+        // Mock upcoming mentorship session (staying as is for now)
+        setUpcomingSession({
+          id: '1',
+          mentorName: 'Dr. Sarah Martin',
+          date: '2026-02-25',
+          time: '14:00',
+          location: 'Salle Innovation A',
+          topic: 'Validation du Business Model'
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
       }
-    ]);
+    };
+
+    fetchData();
   }, [user]);
 
   const getStatusColor = (status: string) => {
