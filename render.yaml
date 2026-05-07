@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: inkibateurdz
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node server/index.cjs
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromConfigVar: DATABASE_URL
+      - key: EMAIL_USER
+        fromConfigVar: EMAIL_USER
+      - key: EMAIL_PASS
+        fromConfigVar: EMAIL_PASS
+      - key: VITE_GOOGLE_CLIENT_ID
+        fromConfigVar: VITE_GOOGLE_CLIENT_ID

@@ -2,11 +2,15 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const { Pool } = require('pg');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../dist')));
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -361,6 +365,13 @@ app.post('/api/projects', async (req, res) => {
 
 
 const PORT = process.env.PORT || 3001;
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
