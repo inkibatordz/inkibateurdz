@@ -16,7 +16,9 @@ import {
   BarChart3,
   Settings,
   Package,
-  Newspaper
+  Newspaper,
+  Menu,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,6 +28,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "../components/ui/sheet";
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 
@@ -38,6 +45,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   const role = user?.role || 'student';
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
   const getNavItems = () => {
     if (role === 'student') {
@@ -93,83 +101,104 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <Logo className="w-10 h-10" />
-            <div>
-              <h1 className="font-bold text-gray-900 leading-tight">2TI</h1>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider">{role}</p>
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white">
+      {/* Logo */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <Logo className="w-10 h-10" />
+          <div>
+            <h1 className="font-bold text-gray-900 leading-tight">2TI</h1>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{role}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsMobileOpen(false)}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="flex-1 text-sm font-medium">{item.label}</span>
+              {item.badge && item.badge > 0 && (
+                <Badge className="bg-orange-500 hover:bg-orange-600 text-white">
+                  {item.badge}
+                </Badge>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User Section */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex items-center justify-between px-2 mb-3">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <Avatar>
+              <AvatarFallback className="bg-blue-600 text-white">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
           </div>
         </div>
+        <Button 
+          variant="outline" 
+          className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Déconnexion
+        </Button>
+      </div>
+    </div>
+  );
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="flex-1 text-sm font-medium">{item.label}</span>
-                {item.badge && item.badge > 0 && (
-                  <Badge className="bg-orange-500 hover:bg-orange-600 text-white">
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User Section */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center justify-between px-2 mb-3">
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <Avatar>
-                <AvatarFallback className="bg-blue-600 text-white">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Déconnexion
-          </Button>
-        </div>
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 border-r border-gray-200 flex-col">
+        <SidebarContent />
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Bienvenue, {user?.firstName} !
-            </h2>
-            <p className="text-sm text-gray-500">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
+          <div className="flex items-center space-x-4">
+            {/* Mobile Menu Trigger */}
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64 border-r-0">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
+
+            <div>
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-none">
+                {user?.firstName ? `Bienvenue, ${user.firstName} !` : 'Bienvenue !'}
+              </h2>
+              <p className="hidden sm:block text-sm text-gray-500">
               {new Date().toLocaleDateString('fr-FR', { 
                 weekday: 'long', 
                 year: 'numeric', 

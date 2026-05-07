@@ -18,9 +18,16 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  Linkedin
+  Linkedin,
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "../components/ui/sheet";
 
 interface NewsItem {
   id: number;
@@ -34,6 +41,7 @@ interface NewsItem {
 const LandingPage: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [scrolled, setScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -74,28 +82,56 @@ const LandingPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <div className="hidden md:flex items-center gap-8">
-            {['Actualités', 'Services', 'Mentors', 'À propos'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
-                {item}
-              </a>
-            ))}
-          </div>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-6">
+              {['Actualités', 'Services', 'Mentors', 'À propos'].map((item) => (
+                <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+                  {item}
+                </a>
+              ))}
+              <Link to="/login">
+                <Button variant="ghost" className="font-bold text-gray-700">Se connecter</Button>
+              </Link>
+              <Link to="/register">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 shadow-xl shadow-blue-200/50 transition-all hover:scale-105 active:scale-95">
+                  Rejoindre
+                </Button>
+              </Link>
+            </div>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
-          >
-            <Link to="/login">
-              <Button variant="ghost" className="font-bold text-gray-700">Se connecter</Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 shadow-xl shadow-blue-200/50 transition-all hover:scale-105 active:scale-95">
-                Rejoindre l'élite
-              </Button>
-            </Link>
-          </motion.div>
+            {/* Mobile Nav Trigger */}
+            <div className="md:hidden">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="w-6 h-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px]">
+                  <div className="flex flex-col gap-8 mt-10">
+                    {['Actualités', 'Services', 'Mentors', 'À propos'].map((item) => (
+                      <a 
+                        key={item} 
+                        href={`#${item.toLowerCase()}`} 
+                        className="text-lg font-bold text-gray-900"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item}
+                      </a>
+                    ))}
+                    <div className="flex flex-col gap-4 pt-6 border-t">
+                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full h-12 font-bold">Se connecter</Button>
+                      </Link>
+                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button className="w-full h-12 bg-blue-600 font-bold">Rejoindre l'élite</Button>
+                      </Link>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -117,9 +153,9 @@ const LandingPage: React.FC = () => {
                 <Badge className="mb-6 py-1.5 px-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-full font-bold">
                   ✨ L'avenir de l'entrepreneuriat étudiant
                 </Badge>
-                <h1 className="text-6xl lg:text-8xl font-black text-gray-900 mb-8 leading-[0.95] tracking-tighter">
+                <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-gray-900 mb-6 lg:mb-8 leading-[0.95] tracking-tighter">
                   Propulsez vos <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Rêves Innovants</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-pink-500">Rêves Innovants</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                   Accompagnement d'élite, réseau d'experts et ressources de pointe pour transformer votre idée en startup à succès.
