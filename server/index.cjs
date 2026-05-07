@@ -374,9 +374,8 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, isGoogle } = req.body;
   
-  // Special case for admin mockup if needed, but better to check DB
   if (email === 'admin' && password === 'admin') {
     return res.json({ 
       success: true, 
@@ -385,7 +384,15 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
+    let result;
+    if (isGoogle) {
+      // Google Login: Only check email
+      result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    } else {
+      // Normal Login: Check email and password
+      result = await pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
+    }
+
     if (result.rows.length > 0) {
       const user = result.rows[0];
       res.json({ 
@@ -402,7 +409,7 @@ app.post('/api/login', async (req, res) => {
         } 
       });
     } else {
-      res.status(401).json({ success: false, message: 'Identifiants incorrects' });
+      res.status(401).json({ success: false, message: isGoogle ? 'Compte non trouvé. Veuillez vous inscrire d\'abord.' : 'Identifiants incorrects' });
     }
   } catch (err) {
     console.error('Login error:', err);
