@@ -170,18 +170,13 @@ app.post('/api/send-otp', async (req, res) => {
   };
 
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
-    res.json({ success: true, message: 'OTP envoyé avec succès' });
+    console.log(`OTP sent successfully to ${email}`);
+    res.json({ success: true, message: 'Un code de vérification a été envoyé à ' + email });
   } catch (error) {
-    console.error('--- EMAIL SENDING FAILED ---');
-    console.error('Error:', error.message);
-    console.log(`SIMULATION: Your OTP code is: ${otp}`);
-    console.log('Ensure EMAIL_USER and EMAIL_PASS are set in Render for real emails.');
-    
-    // Fallback: Allow the user to proceed in "simulation mode"
-    res.json({ 
-      success: true, 
-      message: 'Mode Simulation : Le code est ' + otp + ' (L\'envoi d\'e-mail a échoué, mais vous pouvez continuer pour le test).' 
+    console.error('CRITICAL EMAIL ERROR:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'L\'envoi de l\'email a échoué. Cause : ' + error.message + '. Vérifiez EMAIL_USER et EMAIL_PASS sur Render.' 
     });
   }
 });
