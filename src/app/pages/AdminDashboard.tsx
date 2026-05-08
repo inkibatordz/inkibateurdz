@@ -8,7 +8,8 @@ import {
   Clock, 
   CheckCircle2,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Mail
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
