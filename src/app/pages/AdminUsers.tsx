@@ -371,30 +371,29 @@ const AdminUsers: React.FC = () => {
                           <div className="flex items-center gap-2 w-full sm:w-auto">
                             <Button 
                               size="sm" 
-                              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100 rounded-xl h-9 font-bold text-xs"
+                              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-100 rounded-2xl h-10 px-5 font-black text-[10px] uppercase tracking-wider border-0 transition-all hover:scale-105 active:scale-95"
                               onClick={() => handleApprove(user.id)}
                             >
-                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-2" />
                               Approuver
                             </Button>
                             <Button 
                               size="sm" 
-                              variant="destructive"
-                              className="flex-1 sm:flex-none shadow-lg shadow-red-100 rounded-xl h-9 font-bold text-xs"
+                              className="flex-1 sm:flex-none bg-rose-600 hover:bg-rose-700 text-white shadow-xl shadow-rose-100 rounded-2xl h-10 px-5 font-black text-[10px] uppercase tracking-wider border-0 transition-all hover:scale-105 active:scale-95"
                               onClick={() => handleReject(user.id)}
                             >
-                              <XCircle className="w-4 h-4 mr-1.5" />
+                              <XCircle className="w-3.5 h-3.5 mr-2" />
                               Rejeter
                             </Button>
                           </div>
                         ) : (
                           <Button 
                             size="sm" 
-                            variant="outline"
-                            className="w-full sm:w-auto text-red-600 border-red-100 hover:bg-red-50 rounded-xl h-9 font-bold text-xs ml-auto"
+                            variant="ghost"
+                            className="w-full sm:w-auto text-rose-600 hover:bg-rose-50 rounded-2xl h-10 px-5 font-black text-[10px] uppercase tracking-wider transition-all"
                             onClick={() => handleDeactivate(user.id)}
                           >
-                            <UserX className="w-4 h-4 mr-1.5" />
+                            <UserX className="w-3.5 h-3.5 mr-2" />
                             Désactiver
                           </Button>
                         )}
