@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import KPICard from '../components/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -15,6 +16,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
     pendingApprovals: 0,
@@ -67,40 +69,51 @@ const AdminDashboard: React.FC = () => {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="Utilisateurs totaux"
-            value={stats.totalUsers}
-            icon={Users}
-            color="blue"
-            trend={{ value: '+12%', positive: true }}
-          />
-          <KPICard
-            title="Approbations en attente"
-            value={stats.pendingApprovals}
-            icon={Clock}
-            color="orange"
-          />
-          <KPICard
-            title="Projets totaux"
-            value={stats.totalProjects}
-            icon={FolderKanban}
-            color="purple"
-            trend={{ value: '+8%', positive: true }}
-          />
-          <KPICard
-            title="Projets en attente"
-            value={stats.pendingProjects}
-            icon={CheckCircle2}
-            color="green"
-          />
+          <div onClick={() => navigate('/admin/users')} className="cursor-pointer transition-transform hover:scale-105">
+            <KPICard
+              title="Utilisateurs totaux"
+              value={stats.totalUsers}
+              icon={Users}
+              color="blue"
+              trend={{ value: '+12%', positive: true }}
+            />
+          </div>
+          <div onClick={() => navigate('/admin/users?status=pending')} className="cursor-pointer transition-transform hover:scale-105">
+            <KPICard
+              title="Approbations en attente"
+              value={stats.pendingApprovals}
+              icon={Clock}
+              color="orange"
+            />
+          </div>
+          <div onClick={() => navigate('/admin/projects')} className="cursor-pointer transition-transform hover:scale-105">
+            <KPICard
+              title="Projets totaux"
+              value={stats.totalProjects}
+              icon={FolderKanban}
+              color="purple"
+              trend={{ value: '+8%', positive: true }}
+            />
+          </div>
+          <div onClick={() => navigate('/admin/projects?status=pending')} className="cursor-pointer transition-transform hover:scale-105">
+            <KPICard
+              title="Projets en attente"
+              value={stats.pendingProjects}
+              icon={CheckCircle2}
+              color="green"
+            />
+          </div>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-blue-300">
+          <Card 
+            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-blue-300 group"
+            onClick={() => navigate('/admin/users')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Users className="w-6 h-6 text-blue-600" />
                 </div>
                 <Badge className="bg-orange-500 text-white">{stats.pendingApprovals}</Badge>
@@ -109,16 +122,19 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-gray-600 mb-4">
                 Approuvez ou rejetez les nouvelles inscriptions
               </p>
-              <Button variant="ghost" size="sm" className="text-blue-600 p-0 h-auto">
+              <Button variant="ghost" size="sm" className="text-blue-600 p-0 h-auto group-hover:underline">
                 Voir les demandes <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-purple-300">
+          <Card 
+            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-purple-300 group"
+            onClick={() => navigate('/admin/projects')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <FolderKanban className="w-6 h-6 text-purple-600" />
                 </div>
                 <Badge className="bg-orange-500 text-white">{stats.pendingProjects}</Badge>
@@ -127,16 +143,19 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-gray-600 mb-4">
                 Examinez et validez les projets soumis
               </p>
-              <Button variant="ghost" size="sm" className="text-purple-600 p-0 h-auto">
+              <Button variant="ghost" size="sm" className="text-purple-600 p-0 h-auto group-hover:underline">
                 Voir les projets <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-300">
+          <Card 
+            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-300 group"
+            onClick={() => navigate('/admin/statistics')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-6 h-6 text-green-600" />
                 </div>
               </div>
@@ -144,7 +163,7 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-gray-600 mb-4">
                 Consultez les rapports et analyses
               </p>
-              <Button variant="ghost" size="sm" className="text-green-600 p-0 h-auto">
+              <Button variant="ghost" size="sm" className="text-green-600 p-0 h-auto group-hover:underline">
                 Voir les stats <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </CardContent>
