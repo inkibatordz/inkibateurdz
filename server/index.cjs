@@ -454,11 +454,23 @@ app.delete('/api/users/:id', async (req, res) => {
     return res.status(403).json({ success: false, message: 'Le compte administrateur système ne peut pas être supprimé' });
   }
   try {
-    await safeQuery('DELETE FROM users WHERE id = $1', [id]);
-    res.json({ success: true });
+    // Delete all related data first to avoid foreign key constraints
+    await safeQuery('DELETE FROM notifications WHERE user_id = $1', [id]);
+    await safeQuery('DELETE FROM training_registrations WHERE student_id = $1', [id]);
+    await safeQuery('DELETE FROM material_requests WHERE student_id = $1', [id]);
+    await safeQuery('DELETE FROM projects WHERE student_id = $1 OR mentor_id = $1', [id]);
+    
+    // Finally delete the user
+    const result = await safeQuery('DELETE FROM users WHERE id = $1', [id]);
+    
+    if (result.rowCount > 0) {
+      res.json({ success: true, message: 'Utilisateur et toutes ses données associées supprimés' });
+    } else {
+      res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
   } catch (err) {
     console.error('Error deleting user:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+    res.status(500).json({ success: false, message: 'Erreur serveur lors de la suppression: ' + err.message });
   }
 });
 
