@@ -109,14 +109,21 @@ const StudentDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-        {/* Welcome Message */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Vue d'ensemble
-          </h1>
-          <p className="text-gray-600">
-            Suivez l'avancement de vos projets et vos prochaines sessions
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tighter">
+              Vue d'ensemble
+            </h1>
+            <p className="text-gray-500 font-medium">
+              Suivez l'avancement de vos projets et vos prochaines sessions
+            </p>
+          </div>
+          {user?.label && (
+            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 py-2.5 px-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-orange-100 animate-float h-fit">
+              <Rocket className="w-4 h-4 mr-2" />
+              {user.label}
+            </Badge>
+          )}
         </div>
 
         {/* KPIs */}

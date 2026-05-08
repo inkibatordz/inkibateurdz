@@ -90,6 +90,7 @@ const initDb = async () => {
         student_id TEXT,
         approved BOOLEAN DEFAULT FALSE,
         status TEXT DEFAULT 'pending',
+        label TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -376,6 +377,16 @@ app.post('/api/trainings/:id/notify', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error sending training notifications:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/users/:id/label', async (req, res) => {
+  const { label } = req.body;
+  try {
+    await safeQuery('UPDATE users SET label = $1 WHERE id = $2', [label, req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });

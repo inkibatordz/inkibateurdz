@@ -9,6 +9,7 @@ export interface User {
   firstName: string;
   lastName: string;
   approved: boolean;
+  label?: string;
   // Student specific
   university?: string;
   department?: string; // This will act as 'spécialité'

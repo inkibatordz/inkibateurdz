@@ -77,13 +77,21 @@ const MentorDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Vue d'ensemble
-          </h1>
-          <p className="text-gray-600">
-            Gérez vos projets assignés et suivez les progrès des étudiants
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tighter">
+              Vue d'ensemble
+            </h1>
+            <p className="text-gray-500 font-medium">
+              Gérez vos projets assignés et suivez les progrès des étudiants
+            </p>
+          </div>
+          {user?.label && (
+            <Badge className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-0 py-2.5 px-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-purple-100 animate-float h-fit">
+              <Star className="w-4 h-4 mr-2" />
+              {user.label}
+            </Badge>
+          )}
         </div>
 
         {/* KPIs */}

@@ -20,6 +20,7 @@ interface User {
   id: string;
   role: string;
   approved: boolean;
+  label?: string;
 }
 
 const StatCard: React.FC<{
@@ -89,14 +90,10 @@ const AdminStatistics: React.FC = () => {
   const rejectedProjects = projects.filter(p => p.status === 'rejected').length;
   const assignedProjects = projects.filter(p => !!p.mentorId).length;
 
-  // Label / PME / Incubé stats (based on project flags or status)
-  // "Labellisé" = accepted with mentor assigned
-  const labelProjects = projects.filter(p => p.status === 'accepted' && !!p.mentorId).length;
-  // "Incubé" = status incubation
-  const incubedProjects = incubationProjects;
-  // "PME" = rejected but may be re-evaluated — for now use a count of older accepted projects as PME potential
-  // Since there is no explicit PME field, we use isLabel / isPME flags if they exist
-  const pmeProjects = projects.filter(p => p.isPME).length;
+  // Label / PME / Incubé stats (based on user labels)
+  const labelProjects = users.filter(u => u.label === 'Labellisé').length;
+  const incubedProjects = users.filter(u => u.label === 'Incubé').length;
+  const pmeProjects = users.filter(u => u.label === 'PME').length;
 
   // User stats
   const totalStudents = users.filter(u => u.role === 'student').length;

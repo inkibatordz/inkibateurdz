@@ -120,6 +120,23 @@ const AdminUsers: React.FC = () => {
     }
   };
 
+  const handleUpdateLabel = async (userId: string, label: string) => {
+    try {
+      const res = await fetch(`/api/users/${userId}/label`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: label === 'none' ? null : label }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadUsers();
+        toast.success('Label mis à jour');
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour du label');
+    }
+  };
+
   const handleDeactivate = async (userId: string) => {
     if (!window.confirm('Voulez-vous vraiment désactiver ce compte ? L\'utilisateur devra être ré-approuvé pour accéder au système.')) return;
     try {
@@ -354,16 +371,39 @@ const AdminUsers: React.FC = () => {
                           </div>
                           <div className="space-y-1">
                             <p className="text-xs text-gray-500 truncate font-medium">{user.email}</p>
-                            {(user.department || user.university) && (
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight truncate">
-                                {user.department || user.university}
-                              </p>
-                            )}
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              {(user.department || user.university) && (
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight truncate">
+                                  {user.department || user.university}
+                                </p>
+                              )}
+                              {user.label && (
+                                <Badge className="bg-yellow-50 text-yellow-700 border-yellow-100 text-[9px] font-black uppercase">
+                                  {user.label}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 pt-4 sm:pt-0 border-t sm:border-0 border-gray-50">
+                      <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 sm:pt-0 border-t sm:border-0 border-gray-50 px-5 pb-5 sm:pb-0 sm:pr-5">
+                        {user.approved && user.role === 'student' && (
+                          <Select 
+                            value={user.label || 'none'} 
+                            onValueChange={(val) => handleUpdateLabel(user.id, val)}
+                          >
+                            <SelectTrigger className="w-full sm:w-[130px] h-9 text-[10px] font-bold rounded-xl bg-gray-50 border-0 focus:ring-1">
+                              <SelectValue placeholder="Assigner Label" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sans Label</SelectItem>
+                              <SelectItem value="Labellisé">Labellisé</SelectItem>
+                              <SelectItem value="Incubé">Incubé</SelectItem>
+                              <SelectItem value="PME">PME</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                         {user.role === 'admin' || user.id === currentUser?.id ? (
                           <Badge variant="outline" className="bg-gray-50 text-gray-400 border-gray-100 py-1.5 px-3 rounded-xl font-bold text-[10px] ml-auto">
                             SYSTÈME / VOUS
