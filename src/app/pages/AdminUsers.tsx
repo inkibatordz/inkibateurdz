@@ -412,10 +412,11 @@ const AdminUsers: React.FC = () => {
                   {searchTerm ? 'Essayez de modifier vos critères de recherche' : 'Les nouveaux utilisateurs apparaîtront ici'}
                 </p>
               </div>
-            )}
+          )}
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default AdminUsers;
