@@ -101,10 +101,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white/80 backdrop-blur-xl border-r border-gray-100">
+    <div className="flex flex-col h-full bg-white/90 backdrop-blur-2xl border-r border-gray-100 safe-top safe-bottom">
       {/* Logo Section */}
       <div className="p-8 pb-4">
-        <Link to="/" className="flex items-center space-x-3 group">
+        <Link to="/" className="flex items-center space-x-3 group tap-active">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center transition-all duration-500 group-hover:rotate-[10deg] group-hover:scale-110">
             <Logo className="w-8 h-8 invert brightness-0" />
           </div>
@@ -118,8 +118,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 opacity-50">Menu</p>
+      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+        <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 opacity-50">Menu Principal</p>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -127,18 +127,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileOpen(false)}
-              className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-500 group relative ${
+              className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-500 group relative tap-active ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-100'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-200'
+                  : 'text-gray-500 hover:bg-blue-50/50 hover:text-blue-600'
               }`}
             >
-              <item.icon className={`w-5 h-5 transition-all duration-500 ${isActive ? 'text-white' : 'group-hover:text-blue-600'}`} />
+              <item.icon className={`w-5 h-5 transition-all duration-500 ${isActive ? 'text-white' : 'group-hover:scale-110'}`} />
               <span className="flex-1 text-sm font-black tracking-tight">{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge className={`rounded-xl px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white/20 text-white border-0' : 'bg-blue-50 text-blue-600'}`}>
+                <Badge className={`rounded-xl px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white/20 text-white border-0' : 'bg-orange-500 text-white shadow-lg shadow-orange-200'}`}>
                   {item.badge}
                 </Badge>
+              )}
+              {isActive && (
+                <motion.div layoutId="nav-glow" className="absolute left-0 w-1 h-6 bg-white rounded-full ml-1" />
               )}
             </Link>
           );

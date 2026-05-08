@@ -347,14 +347,30 @@ app.post('/api/trainings/:id/notify', async (req, res) => {
     if (trainingRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Formation non trouvée' });
     
     const { title, date, time } = trainingRes.rows[0];
+    const dateStr = new Date(date).toLocaleDateString('fr-FR');
+    
+    // Get all approved students
     const studentsRes = await safeQuery('SELECT id FROM users WHERE role = $1 AND status = $2', ['student', 'approved']);
     
-    const notifications = studentsRes.rows.map(student => 
-      safeQuery(
+    // Get registered students
+    const regRes = await safeQuery('SELECT student_id FROM training_registrations WHERE training_id = $1', [id]);
+    const registeredIds = new Set(regRes.rows.map(r => r.student_id));
+    
+    const notifications = studentsRes.rows.map(student => {
+      const isRegistered = registeredIds.has(student.id);
+      const notifId = `notif-${Date.now()}-${student.id.slice(-4)}`;
+      
+      const notifTitle = isRegistered ? 'Rappel: Formation' : 'Nouvelle Formation';
+      const notifMessage = isRegistered 
+        ? `N'oubliez pas ! Votre formation "${title}" aura lieu le ${dateStr} à ${time}.`
+        : `Une nouvelle formation "${title}" est disponible le ${dateStr}. Inscrivez-vous dès maintenant !`;
+      const notifType = isRegistered ? 'warning' : 'info';
+
+      return safeQuery(
         'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, $5)',
-        [`notif-${Date.now()}-${student.id.slice(-4)}`, student.id, 'Nouvelle Formation', `La formation "${title}" est prévue le ${new Date(date).toLocaleDateString('fr-FR')} à ${time}. Inscrivez-vous vite !`, 'info']
-      )
-    );
+        [notifId, student.id, notifTitle, notifMessage, notifType]
+      );
+    });
     
     await Promise.all(notifications);
     res.json({ success: true });

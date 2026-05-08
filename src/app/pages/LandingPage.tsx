@@ -66,8 +66,8 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Navigation - Glassmorphism */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/70 backdrop-blur-xl border-b border-gray-200/50 py-3' : 'bg-transparent py-5'
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 safe-top ${
+        scrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-gray-100/50 py-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.02)]' : 'bg-transparent py-6'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <motion.div 
@@ -155,7 +155,7 @@ const LandingPage: React.FC = () => {
                 </Badge>
                 <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-gray-900 mb-6 lg:mb-8 leading-[0.95] tracking-tighter">
                   Propulsez vos <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-pink-500">Rêves Innovants</span>
+                  <span className="text-gradient">Rêves Innovants</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                   Accompagnement d'élite, réseau d'experts et ressources de pointe pour transformer votre idée en startup à succès.
@@ -233,13 +233,13 @@ const LandingPage: React.FC = () => {
               <motion.div 
                 key={i}
                 whileHover={{ y: -10 }}
-                className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all border border-gray-100 group"
+                className="premium-card p-10 group tap-active"
               >
-                <div className={`${feature.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg`}>
-                  <feature.icon className="w-6 h-6" />
+                <div className={`${feature.color} w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-white mb-8 shadow-2xl shadow-${feature.color.split('-')[1]}-200 transition-transform group-hover:rotate-6`}>
+                  <feature.icon className="w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
-                <p className="text-gray-500 leading-relaxed font-medium">{feature.desc}</p>
+                <h3 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">{feature.title}</h3>
+                <p className="text-gray-500 leading-relaxed font-bold opacity-80">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
