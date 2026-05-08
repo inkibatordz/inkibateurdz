@@ -619,6 +619,27 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 
+app.post('/api/projects', async (req, res) => {
+  const { title, description, studentId, fileCtt } = req.body;
+  const id = 'proj-' + Date.now();
+  const submittedDate = new Date().toISOString();
+  
+  try {
+    await safeQuery(
+      'INSERT INTO projects (id, title, description, student_id, status, submitted_date, file_ctt, progress) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [id, title, description || 'Nouveau projet', studentId, 'pending', submittedDate, fileCtt || null, 0]
+    );
+
+    // Notify Admin
+    await createNotification('admin', 'Nouveau projet soumis', `Un nouveau projet intitulé "${title}" a été soumis pour examen.`, 'info');
+
+    res.json({ success: true, project: { id, title, status: 'pending' } });
+  } catch (err) {
+    console.error('Error creating project:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
 app.put('/api/projects/:id/status', async (req, res) => {
   const id = req.params.id;
   const { status } = req.body;
