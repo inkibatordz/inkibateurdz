@@ -27,6 +27,7 @@ import {
 } from '../components/ui/select';
 
 const AdminUsers: React.FC = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -355,7 +356,11 @@ const AdminUsers: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {!user.approved ? (
+                      {user.role === 'admin' || user.id === currentUser?.id ? (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-500">
+                          Système / Vous
+                        </Badge>
+                      ) : !user.approved ? (
                         <>
                           <Button 
                             size="sm" 
