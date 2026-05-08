@@ -25,17 +25,33 @@ const AdminDashboard: React.FC = () => {
   });
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+    const fetchStats = async () => {
+      try {
+        const usersRes = await fetch('/api/users');
+        const usersData = await usersRes.json();
+        
+        const projectsRes = await fetch('/api/projects');
+        const projectsData = await projectsRes.json();
 
-    setStats({
-      totalUsers: users.length,
-      pendingApprovals: users.filter((u: any) => !u.approved).length,
-      totalProjects: projects.length,
-      pendingProjects: projects.filter((p: any) => p.status === 'pending').length,
-      activeStudents: users.filter((u: any) => u.role === 'student' && u.approved).length,
-      activeMentors: users.filter((u: any) => u.role === 'mentor' && u.approved).length
-    });
+        if (usersData.success && projectsData.success) {
+          const allUsers = usersData.users;
+          const allProjects = projectsData.projects;
+
+          setStats({
+            totalUsers: allUsers.length,
+            pendingApprovals: allUsers.filter((u: any) => u.status === 'pending').length,
+            totalProjects: allProjects.length,
+            pendingProjects: allProjects.filter((p: any) => p.status === 'pending').length,
+            activeStudents: allUsers.filter((u: any) => u.role === 'student' && u.status === 'approved').length,
+            activeMentors: allUsers.filter((u: any) => u.role === 'mentor' && u.status === 'approved').length
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   return (
