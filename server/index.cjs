@@ -731,6 +731,24 @@ app.put('/api/projects/:id/status', async (req, res) => {
   }
 });
 
+app.delete('/api/projects/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    // Delete messages related to this project
+    await safeQuery('DELETE FROM messages WHERE project_id = $1', [id]);
+    
+    const result = await safeQuery('DELETE FROM projects WHERE id = $1', [id]);
+    if (result.rowCount > 0) {
+      res.json({ success: true, message: 'Projet supprimé' });
+    } else {
+      res.status(404).json({ success: false, message: 'Projet non trouvé' });
+    }
+  } catch (err) {
+    console.error('Error deleting project:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
 app.put('/api/projects/:id/assign-mentor', async (req, res) => {
   const id = req.params.id;
   const { mentorId } = req.body;

@@ -10,7 +10,8 @@ import {
   XCircle, 
   Search,
   FileText,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -139,6 +140,23 @@ const AdminProjects: React.FC = () => {
       }
     } catch (error) {
       toast.error('Erreur lors de l\'assignation du mentor');
+    }
+    }
+  };
+  
+  const handleDeleteProject = async (id: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')) return;
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Projet supprimé avec succès');
+        loadProjects();
+      } else {
+        toast.error(data.message || 'Erreur lors de la suppression');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
     }
   };
 
@@ -299,17 +317,29 @@ const AdminProjects: React.FC = () => {
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t gap-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedProject(project);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Voir détails ({project.fileCtt || 'Cahier'})
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Voir détails ({project.fileCtt || 'Cahier'})
+                        </Button>
+
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 px-2"
+                          onClick={() => handleDeleteProject(project.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Supprimer
+                        </Button>
+                      </div>
                       
                       {project.status === 'pending' && (
                         <div className="flex items-center space-x-2 flex-1 justify-end">
