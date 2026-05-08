@@ -13,8 +13,11 @@ import {
   Clock,
   Calendar,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+import ChatRoom from '../components/ChatRoom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Project {
@@ -175,9 +178,21 @@ const StudentDashboard: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge className={getStatusColor(project.status)}>
-                          {getStatusLabel(project.status)}
-                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getStatusColor(project.status)}>
+                            {getStatusLabel(project.status)}
+                          </Badge>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-blue-600 h-8 w-8">
+                                <MessageSquare className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
+                              <ChatRoom projectId={project.id} projectName={project.title} />
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </div>
                     ))}
                   </div>

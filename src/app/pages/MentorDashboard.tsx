@@ -11,8 +11,11 @@ import {
   CheckCircle2, 
   Users, 
   ArrowRight,
-  Star
+  Star,
+  MessageSquare
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
+import ChatRoom from '../components/ChatRoom';
 
 interface AssignedProject {
   id: string;
@@ -143,6 +146,17 @@ const MentorDashboard: React.FC = () => {
                     <Badge className={getStatusColor(project.status)}>
                       {getStatusLabel(project.status)}
                     </Badge>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-blue-600 border-blue-200">
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Chat
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
+                        <ChatRoom projectId={project.id} projectName={project.title} />
+                      </DialogContent>
+                    </Dialog>
                     <Button variant="outline" size="sm">
                       Voir détails
                     </Button>

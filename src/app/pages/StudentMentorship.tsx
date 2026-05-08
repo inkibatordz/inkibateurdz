@@ -40,8 +40,8 @@ const StudentMentorship: React.FC = () => {
           if (p.mentor_id) {
             mentorMap.set(p.mentor_id, {
               id: p.mentor_id,
-              firstName: p.mentor_first_name,
-              lastName: p.mentor_last_name,
+              firstName: p.mentor_first_name || 'Mentor',
+              lastName: p.mentor_last_name || 'Assigné',
               projectId: p.id,
               projectTitle: p.title
             });

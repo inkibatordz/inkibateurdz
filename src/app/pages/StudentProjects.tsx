@@ -228,28 +228,36 @@ const StudentProjects: React.FC = () => {
                       </div>
                     )}
 
-                    {project.fileCtt && (
-                      <div className="flex items-center space-x-2 pt-4 border-t mt-4">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm text-gray-700">{project.fileCtt}</span>
-                        <div className="ml-auto flex gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-                                <MessageSquare className="w-4 h-4 mr-2" />
-                                Chat avec Mentor
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
-                              <ChatRoom projectId={project.id} projectName={project.title} />
-                            </DialogContent>
-                          </Dialog>
+                    <div className="flex items-center justify-between pt-4 border-t mt-4">
+                      <div className="flex items-center space-x-2">
+                        {project.fileCtt ? (
+                          <>
+                            <FileText className="w-5 h-5 text-blue-600" />
+                            <span className="text-sm text-gray-700">{project.fileCtt}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">Aucun document joint</span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Chat avec Mentor
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
+                            <ChatRoom projectId={project.id} projectName={project.title} />
+                          </DialogContent>
+                        </Dialog>
+                        {project.fileCtt && (
                           <Button variant="ghost" size="sm" className="text-blue-600">
                             Télécharger CTT
                           </Button>
-                        </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
