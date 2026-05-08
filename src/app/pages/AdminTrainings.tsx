@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { GraduationCap, Plus, Bell, Calendar, Trash2 } from 'lucide-react';
+import { GraduationCap, Plus, Bell, Calendar, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Formation {
@@ -24,6 +24,9 @@ const BASE_URL = '';
 const AdminTrainings: React.FC = () => {
   const [formations, setFormations] = useState<Formation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [selectedFormation, setSelectedFormation] = useState<string>('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -79,6 +82,23 @@ const AdminTrainings: React.FC = () => {
     } catch (error) {
       console.error('Error adding formation:', error);
       toast.error('Erreur serveur');
+    }
+  };
+
+    }
+  };
+
+  const handleViewParticipants = async (id: string, title: string) => {
+    setSelectedFormation(title);
+    try {
+      const res = await fetch(`${BASE_URL}/api/trainings/${id}/participants`);
+      const data = await res.json();
+      if (data.success) {
+        setParticipants(data.participants);
+        setIsParticipantsOpen(true);
+      }
+    } catch (error) {
+      toast.error('Erreur lors du chargement des participants');
     }
   };
 
@@ -194,7 +214,15 @@ const AdminTrainings: React.FC = () => {
                     onClick={() => handleSendNotification(formation.id, formation.title)}
                   >
                     <Bell className="w-4 h-4 mr-2" />
-                    Notifier les étudiants
+                    Notifier
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50"
+                    onClick={() => handleViewParticipants(formation.id, formation.title)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Étudiants
                   </Button>
                   <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(formation.id)}>
                     <Trash2 className="w-4 h-4" />
@@ -209,6 +237,48 @@ const AdminTrainings: React.FC = () => {
             </div>
           )}
         </div>
+
+        <Dialog open={isParticipantsOpen} onOpenChange={setIsParticipantsOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                Inscrits : {selectedFormation}
+                <span className="ml-auto text-sm text-gray-400 font-normal">
+                  {participants.length} étudiant(s)
+                </span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto mt-4 pr-2 custom-scrollbar">
+              {participants.length > 0 ? (
+                <div className="space-y-3">
+                  {participants.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs shadow-sm">
+                          {p.firstName?.[0]}{p.lastName?.[0]}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm">{p.firstName} {p.lastName}</p>
+                          <p className="text-xs text-gray-500 font-medium">{p.email}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">{p.department}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">{p.level}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">Aucun inscrit pour le moment</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

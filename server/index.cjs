@@ -381,6 +381,32 @@ app.post('/api/trainings/:id/notify', async (req, res) => {
   }
 });
 
+app.get('/api/trainings/:id/participants', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await safeQuery(`
+      SELECT u.first_name, u.last_name, u.email, u.department, u.level
+      FROM training_registrations tr
+      JOIN users u ON tr.student_id = u.id
+      WHERE tr.training_id = $1
+      ORDER BY u.last_name ASC
+    `, [id]);
+    
+    const participants = result.rows.map(row => ({
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.email,
+      department: row.department,
+      level: row.level
+    }));
+    
+    res.json({ success: true, participants });
+  } catch (err) {
+    console.error('Error fetching participants:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.put('/api/users/:id/label', async (req, res) => {
   const { label } = req.body;
   try {
