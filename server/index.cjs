@@ -469,6 +469,9 @@ app.get('/api/users', async (req, res) => {
 
 app.put('/api/users/:id/approve', async (req, res) => {
   const id = req.params.id;
+  if (id === 'admin') {
+    return res.status(403).json({ success: false, message: 'Action interdite sur le compte administrateur système' });
+  }
   try {
     await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
     res.json({ success: true });
@@ -480,6 +483,9 @@ app.put('/api/users/:id/approve', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
   const id = req.params.id;
+  if (id === 'admin') {
+    return res.status(403).json({ success: false, message: 'Le compte administrateur système ne peut pas être supprimé' });
+  }
   try {
     await safeQuery('DELETE FROM users WHERE id = $1', [id]);
     res.json({ success: true });

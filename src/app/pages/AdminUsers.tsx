@@ -57,7 +57,9 @@ const AdminUsers: React.FC = () => {
       const res = await fetch('/api/users');
       const data = await res.json();
       if (data.success) {
-        setUsers(data.users);
+        // Hide system admin from the list
+        const filtered = data.users.filter((u: any) => u.role !== 'admin' && u.id !== 'admin');
+        setUsers(filtered);
       }
     } catch (error) {
       console.error('Error loading users:', error);
