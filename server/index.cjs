@@ -436,11 +436,42 @@ app.put('/api/users/:id/approve', async (req, res) => {
     return res.status(403).json({ success: false, message: 'Action interdite sur le compte administrateur système' });
   }
   try {
+    // Get user email before updating
+    const userResult = await safeQuery('SELECT email, first_name, last_name FROM users WHERE id = $1', [id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+    const user = userResult.rows[0];
+
     await safeQuery('UPDATE users SET status = $1, approved = $2 WHERE id = $3', ['approved', true, id]);
     
-    // Notify the user
+    // Notify the user in-app
     await createNotification(id, 'Compte approuvé', 'Félicitations ! Votre compte a été approuvé. Vous pouvez maintenant accéder à toutes les fonctionnalités.', 'success');
     
+    // Send email notification
+    try {
+      await transporter.sendMail({
+        from: `"Inkibator Admin" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: 'Votre compte Inkibator a été approuvé !',
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2563eb;">Félicitations ${user.first_name} !</h2>
+            <p>Nous avons le plaisir de vous informer que votre compte sur la plateforme <strong>Inkibator</strong> a été approuvé par l'administration.</p>
+            <p>Vous pouvez dès à présent vous connecter et accéder à toutes les ressources de l'incubateur.</p>
+            <div style="margin-top: 30px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+              <p style="margin: 0;"><strong>Lien de connexion :</strong> <a href="${process.env.APP_URL || 'http://localhost:5173'}/login">Accéder à mon compte</a></p>
+            </div>
+            <p style="margin-top: 30px; font-size: 12px; color: #9ca3af;">Ceci est un message automatique, merci de ne pas y répondre.</p>
+          </div>
+        `
+      });
+      console.log(`Email d'approbation envoyé à ${user.email}`);
+    } catch (mailError) {
+      console.error('Erreur lors de l\'envoi de l\'email d\'approbation:', mailError.message);
+      // We don't fail the request if email fails, but we log it
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('Error approving user:', err.message);
@@ -477,13 +508,6 @@ app.delete('/api/users/:id', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password, isGoogle } = req.body;
   
-  if (email === 'admin' && password === 'admin') {
-    return res.json({ 
-      success: true, 
-      user: { id: 'admin', email: 'admin', role: 'admin', firstName: 'Admin', lastName: 'System' } 
-    });
-  }
-
   try {
     let result;
     if (isGoogle) {
@@ -491,22 +515,27 @@ app.post('/api/login', async (req, res) => {
       result = await safeQuery('SELECT * FROM users WHERE email = $1', [email]);
     } else {
       // Normal Login: Check email and password
-      result = await safeQuery('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
+      // We check both email OR id (for the system admin account which uses 'admin' as both)
+      result = await safeQuery(
+        'SELECT * FROM users WHERE (email = $1 OR id = $1) AND password = $2', 
+        [email, password]
+      );
     }
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      // Block unapproved students
+      
+      // Block unapproved students (but allow admin and mentors)
       if (user.role === 'student' && user.status !== 'approved') {
         return res.status(403).json({ 
           success: false, 
-          message: "Votre compte est en attente d'approbation par l'administration. Vous recevrez une notification une fois validé." 
+          message: "Votre compte est en attente d'approbation par l'administration. Vous recevrez une notification par email une fois validé." 
         });
       }
 
-      // Notify Admin of student login
-      if (user.role === 'student') {
-        await createNotification('admin', 'Connexion étudiant', `L'étudiant ${user.first_name} ${user.last_name} vient de se connecter.`, 'info');
+      // Notify Admin of student/mentor login (optional, but keep for consistency with current code)
+      if (user.role !== 'admin') {
+        await createNotification('admin', 'Nouvelle connexion', `${user.role === 'student' ? 'L\'étudiant' : 'Le mentor'} ${user.first_name} ${user.last_name} s'est connecté.`, 'info');
       }
 
       res.json({ 
@@ -521,7 +550,7 @@ app.post('/api/login', async (req, res) => {
           level: user.level,
           studentId: user.student_id,
           status: user.status,
-          approved: user.status === 'approved'
+          approved: user.status === 'approved' || user.role === 'admin'
         } 
       });
     } else {

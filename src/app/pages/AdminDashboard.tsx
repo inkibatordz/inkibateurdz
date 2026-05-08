@@ -25,15 +25,19 @@ const AdminDashboard: React.FC = () => {
     activeStudents: 0,
     activeMentors: 0
   });
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
         const usersRes = await fetch('/api/users');
         const usersData = await usersRes.json();
         
         const projectsRes = await fetch('/api/projects');
         const projectsData = await projectsRes.json();
+
+        const notifsRes = await fetch('/api/notifications?userId=admin');
+        const notifsData = await notifsRes.json();
 
         if (usersData.success && projectsData.success) {
           const allUsers = usersData.users;
@@ -48,13 +52,40 @@ const AdminDashboard: React.FC = () => {
             activeMentors: allUsers.filter((u: any) => u.role === 'mentor' && u.status === 'approved').length
           });
         }
+
+        if (notifsData.success) {
+          setNotifications(notifsData.notifications.slice(0, 5));
+        }
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
+        console.error('Error fetching dashboard data:', error);
       }
     };
 
-    fetchStats();
+    fetchDashboardData();
   }, []);
+
+  const getNotifColor = (type: string) => {
+    switch (type) {
+      case 'success': return 'bg-emerald-500';
+      case 'warning': return 'bg-orange-500';
+      case 'error': return 'bg-rose-500';
+      default: return 'bg-blue-500';
+    }
+  };
+
+  const getTimeAgo = (date: string) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffMs = now.getTime() - past.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+    if (diffHours > 0) return `Il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
+    if (diffMins > 0) return `Il y a ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+    return "À l'instant";
+  };
 
   return (
     <div className="space-y-10 animate-in">
@@ -68,7 +99,11 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="rounded-xl border-gray-200 font-bold text-xs h-11 px-6 shadow-sm hover:bg-white hover:shadow-md transition-all">
+            <Button 
+              variant="outline" 
+              className="rounded-xl border-gray-200 font-bold text-xs h-11 px-6 shadow-sm hover:bg-white hover:shadow-md transition-all"
+              onClick={() => navigate('/admin/notifications')}
+            >
               <Clock className="w-4 h-4 mr-2 text-blue-600" />
               Journal d'activité
             </Button>
@@ -220,35 +255,28 @@ const AdminDashboard: React.FC = () => {
             <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="space-y-8">
-                  <div className="flex gap-4 group cursor-pointer">
-                    <div className="w-1.5 h-12 bg-blue-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
-                    <div>
-                      <p className="text-sm text-gray-900 leading-tight">
-                        <span className="font-black">Nouveau projet</span> soumis par <span className="text-blue-600 font-bold">Marie Dubois</span>
-                      </p>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Il y a 2 heures</p>
+                  {notifications.length > 0 ? notifications.map((notif) => (
+                    <div key={notif.id} className="flex gap-4 group cursor-pointer" onClick={() => navigate('/admin/notifications')}>
+                      <div className={`w-1.5 h-12 ${getNotifColor(notif.type)} rounded-full group-hover:scale-y-125 transition-transform origin-top`} />
+                      <div>
+                        <p className="text-sm text-gray-900 leading-tight">
+                          <span className="font-black">{notif.title}</span> : {notif.message.length > 60 ? notif.message.substring(0, 60) + '...' : notif.message}
+                        </p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">{getTimeAgo(notif.created_at)}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-4 group cursor-pointer">
-                    <div className="w-1.5 h-12 bg-orange-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
-                    <div>
-                      <p className="text-sm text-gray-900 leading-tight">
-                        <span className="font-black">Inscription</span> de <span className="text-orange-600 font-bold">Thomas Martin</span> (Mentor)
-                      </p>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Il y a 5 heures</p>
+                  )) : (
+                    <div className="text-center py-10">
+                       <Clock className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                       <p className="text-xs font-bold text-gray-400">Aucune activité récente</p>
                     </div>
-                  </div>
-                  <div className="flex gap-4 group cursor-pointer">
-                    <div className="w-1.5 h-12 bg-indigo-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
-                    <div>
-                      <p className="text-sm text-gray-900 leading-tight">
-                        <span className="font-black">Projet Validé</span> : Application IoT Smart Campus
-                      </p>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Hier</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <Button variant="ghost" className="w-full mt-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 hover:text-blue-600 hover:bg-blue-50">
+                <Button 
+                  variant="ghost" 
+                  className="w-full mt-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                  onClick={() => navigate('/admin/notifications')}
+                >
                   Voir tout l'historique
                 </Button>
               </CardContent>
