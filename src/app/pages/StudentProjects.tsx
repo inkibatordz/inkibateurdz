@@ -8,9 +8,10 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Progress } from '../components/ui/progress';
-import { FolderKanban, Plus, Upload, FileText, Calendar as CalendarIcon, MessageCircle } from 'lucide-react';
+import { FolderKanban, Plus, Upload, FileText, Calendar as CalendarIcon, MessageCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import ChatRoom from '../components/ChatRoom';
 
 interface Project {
   id: string;
@@ -43,7 +44,13 @@ const StudentProjects: React.FC = () => {
       const res = await fetch(`/api/projects?studentId=${user.id}`);
       const data = await res.json();
       if (data.success) {
-        setProjects(data.projects);
+        const mappedProjects = data.projects.map((p: any) => ({
+          ...p,
+          studentName: `${p.student_first_name} ${p.student_last_name}`,
+          mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
+          submittedDate: p.submitted_date
+        }));
+        setProjects(mappedProjects);
       }
     } catch (error) {
       toast.error('Erreur lors du chargement des projets');
@@ -225,9 +232,22 @@ const StudentProjects: React.FC = () => {
                       <div className="flex items-center space-x-2 pt-4 border-t mt-4">
                         <FileText className="w-5 h-5 text-blue-600" />
                         <span className="text-sm text-gray-700">{project.fileCtt}</span>
-                        <Button variant="ghost" size="sm" className="ml-auto text-blue-600">
-                          Télécharger CTT
-                        </Button>
+                        <div className="ml-auto flex gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Chat avec Mentor
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
+                              <ChatRoom projectId={project.id} projectName={project.title} />
+                            </DialogContent>
+                          </Dialog>
+                          <Button variant="ghost" size="sm" className="text-blue-600">
+                            Télécharger CTT
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>

@@ -598,11 +598,11 @@ app.get('/api/projects', async (req, res) => {
              u.first_name as student_first_name, u.last_name as student_last_name,
              m.first_name as mentor_first_name, m.last_name as mentor_last_name
       FROM projects p 
-      JOIN users u ON p.student_id = u.id
+      LEFT JOIN users u ON p.student_id = u.id
       LEFT JOIN users m ON p.mentor_id = m.id
     `;
     let params = [];
-    
+
     if (studentId) {
       queryText += ' WHERE p.student_id = $1';
       params.push(studentId);
@@ -610,40 +610,12 @@ app.get('/api/projects', async (req, res) => {
       queryText += ' WHERE p.mentor_id = $1';
       params.push(mentorId);
     }
-    
+
+    queryText += ' ORDER BY p.submitted_date DESC';
     const result = await safeQuery(queryText, params);
-    const projects = result.rows.map(p => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      status: p.status,
-      studentId: p.student_id,
-      mentorId: p.mentor_id,
-      studentName: `${p.student_first_name} ${p.student_last_name}`,
-      mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
-      submittedDate: p.submitted_date,
-      fileCtt: p.file_ctt
-    }));
-    res.json({ success: true, projects });
+    res.json({ success: true, projects: result.rows });
   } catch (err) {
     console.error('Error fetching projects:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
-  }
-});
-
-app.post('/api/projects', async (req, res) => {
-  const { id, title, description, studentId } = req.body;
-  try {
-    await safeQuery(
-      'INSERT INTO projects (id, title, description, student_id, submitted_date, status) VALUES ($1, $2, $3, $4, $5, $6)',
-      [id || `proj-${Date.now()}`, title, description, studentId, new Date().toISOString(), 'pending']
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error adding project:', err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
 
 app.put('/api/projects/:id/status', async (req, res) => {
   const id = req.params.id;
@@ -662,10 +634,53 @@ app.put('/api/projects/:id/assign-mentor', async (req, res) => {
   const { mentorId } = req.body;
   try {
     await safeQuery('UPDATE projects SET mentor_id = $1, status = $2 WHERE id = $3', [mentorId, 'accepted', id]);
+    
+    // Notify the student and the mentor
+    const projectRes = await safeQuery('SELECT title, student_id FROM projects WHERE id = $1', [id]);
+    if (projectRes.rows.length > 0) {
+      const { title, student_id } = projectRes.rows[0];
+      await createNotification(student_id, 'Mentor assigné', `Le mentor a été assigné à votre projet "${title}".`, 'success');
+      await createNotification(mentorId, 'Nouveau projet assigné', `Vous avez été assigné au projet "${title}".`, 'info');
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('Error assigning mentor:', err.message);
     res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+// --- Messages API ---
+app.get('/api/messages/:projectId', async (req, res) => {
+  const { projectId } = req.params;
+  try {
+    const result = await safeQuery(
+      `SELECT m.*, u.first_name, u.last_name, u.role
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       WHERE m.project_id = $1
+       ORDER BY m.created_at ASC`,
+      [projectId]
+    );
+    res.json({ success: true, messages: result.rows });
+  } catch (err) {
+    console.error('Error fetching messages:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+app.post('/api/messages', async (req, res) => {
+  const { projectId, senderId, content } = req.body;
+  const id = 'msg_' + Date.now();
+  try {
+    await safeQuery(
+      'INSERT INTO messages (id, project_id, sender_id, content) VALUES ($1, $2, $3, $4)',
+      [id, projectId, senderId, content]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error sending message:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 

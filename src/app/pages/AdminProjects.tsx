@@ -76,7 +76,13 @@ const AdminProjects: React.FC = () => {
       const res = await fetch('/api/projects');
       const data = await res.json();
       if (data.success) {
-        setProjects(data.projects);
+        const mappedProjects = data.projects.map((p: any) => ({
+          ...p,
+          studentName: `${p.student_first_name} ${p.student_last_name}`,
+          mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
+          submittedDate: p.submitted_date
+        }));
+        setProjects(mappedProjects);
       }
     } catch (error) {
       console.error('Error loading projects:', error);

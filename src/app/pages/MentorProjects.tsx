@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { FolderKanban, FileText, Download, Calendar as CalendarIcon } from 'lucide-react';
+import { FolderKanban, FileText, Download, Calendar as CalendarIcon, MessageSquare } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Label } from '../components/ui/label';
+import ChatRoom from '../components/ChatRoom';
 
 interface Project {
   id: string;
@@ -43,7 +44,13 @@ const MentorProjects: React.FC = () => {
       const res = await fetch(`/api/projects?mentorId=${user.id}`);
       const data = await res.json();
       if (data.success) {
-        setProjects(data.projects);
+        const mappedProjects = data.projects.map((p: any) => ({
+          ...p,
+          studentName: `${p.student_first_name} ${p.student_last_name}`,
+          mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
+          submittedDate: p.submitted_date
+        }));
+        setProjects(mappedProjects);
       }
     } catch (error) {
       toast.error('Erreur de chargement des projets');
@@ -143,6 +150,17 @@ const MentorProjects: React.FC = () => {
                         <p className="text-2xl font-bold text-blue-600">{project.progress || 0}%</p>
                      </div>
                      <div className="flex space-x-3">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Chat
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl p-0 border-0 bg-transparent shadow-none">
+                            <ChatRoom projectId={project.id} projectName={project.title} />
+                          </DialogContent>
+                        </Dialog>
                         <Button 
                           variant="outline"
                           onClick={() => {
