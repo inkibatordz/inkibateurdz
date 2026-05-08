@@ -98,6 +98,27 @@
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Custom Animations */
+  @keyframes gradient-x {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0px); }
+  }
+
+  --animate-gradient-x: gradient-x 15s ease infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @layer base {
@@ -205,10 +226,6 @@
     @apply active:scale-95 transition-transform duration-200;
   }
 
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 animate-gradient-x;
-  }
-
   .safe-top {
     padding-top: max(1.25rem, env(safe-area-inset-top));
   }
@@ -217,29 +234,14 @@
     padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
   }
 
-  @keyframes gradient-x {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-  }
-
-  .animate-gradient-x {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600;
     background-size: 200% 200%;
     animation: gradient-x 15s ease infinite;
   }
 
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-  }
-
   .animate-float {
     animation: float 4s ease-in-out infinite;
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0px); }
   }
 
   .animate-in {
