@@ -85,9 +85,6 @@ const AdminTrainings: React.FC = () => {
     }
   };
 
-    }
-  };
-
   const handleViewParticipants = async (id: string, title: string) => {
     setSelectedFormation(title);
     try {
