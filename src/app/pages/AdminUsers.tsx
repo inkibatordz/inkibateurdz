@@ -14,7 +14,7 @@ import {
   Filter,
   Plus
 } from 'lucide-react';
-import { User } from '../contexts/AuthContext';
+import { User, useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
