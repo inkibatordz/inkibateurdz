@@ -137,6 +137,40 @@ const initDb = async () => {
 
 initDb();
 
+app.post('/api/test-email', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: 'Email requis' });
+
+  try {
+    const testTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await testTransporter.verify();
+    
+    await testTransporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Test de Connexion Inkibator',
+      text: 'Si vous recevez ceci, votre configuration Email sur Render est PARFAITE !'
+    });
+
+    res.json({ success: true, message: 'Email de test envoyé avec succès !' });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Échec du test : ' + error.message,
+      setup_guide: '1. Activez la validation en 2 étapes sur votre compte Google. 2. Créez un "Mot de passe d\'application" sur https://myaccount.google.com/apppasswords. 3. Mettez à jour EMAIL_USER et EMAIL_PASS sur Render.'
+    });
+  }
+});
+
 app.post('/api/send-otp', async (req, res) => {
   const { email } = req.body;
   
@@ -151,7 +185,8 @@ app.post('/api/send-otp', async (req, res) => {
     console.error('Email variables are missing in /api/send-otp');
     return res.status(500).json({ 
       success: false, 
-      message: 'Erreur Configuration : EMAIL_USER ou EMAIL_PASS manquant sur Render.' 
+      message: 'Erreur Configuration : EMAIL_USER ou EMAIL_PASS manquant sur Render.',
+      instructions: 'Allez dans les réglages "Environment" de Render et ajoutez EMAIL_USER (votre gmail) et EMAIL_PASS (le code de 16 lettres).'
     });
   }
 
@@ -161,25 +196,23 @@ app.post('/api/send-otp', async (req, res) => {
       [email, otp, expires]
     );
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Votre code de vérification -  Incubator',
-    html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <h2 style="color: #2563eb;">Verification Code</h2>
-        <p>Bonjour,</p>
-        <p>Voici votre code de vérification pour vous connecter à l'Incubateur Universitaire :</p>
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e40af; margin: 20px 0; text-align: center; background: #f3f4f6; padding: 15px; border-radius: 8px;">
-          ${otp}
+    const mailOptions = {
+      from: `"Incubateur 2TI" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `${otp} est votre code de vérification`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border-radius: 24px; background: #f8fafc; border: 1px solid #e2e8f0;">
+          <h2 style="color: #2563eb; font-size: 28px; font-weight: 800; margin-bottom: 24px; text-align: center;">Vérification Email</h2>
+          <p style="color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">Bienvenue sur la plateforme Inkibator. Utilisez le code secret ci-dessous pour finaliser votre inscription :</p>
+          <div style="background: #ffffff; padding: 30px; border-radius: 20px; text-align: center; margin: 32px 0; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <span style="font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #1e40af; font-family: monospace;">${otp}</span>
+          </div>
+          <p style="color: #64748b; font-size: 14px; text-align: center;">Ce code expirera dans 10 minutes pour votre sécurité.</p>
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;">
+          <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2026 Tlemcen Tech Incubator - 2TI. Tous droits réservés.</p>
         </div>
-        <p>Ce code expirera dans 10 minutes.</p>
-        <p>Si vous n'avez pas demandé ce code, vous pouvez ignorer cet e-mail.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="font-size: 12px; color: #6b7280;">© 2026 University Incubator. Tous droits réservés.</p>
-      </div>
-    `,
-  };
+      `,
+    };
 
     await transporter.sendMail(mailOptions);
     console.log(`OTP sent successfully to ${email}`);
@@ -188,7 +221,8 @@ app.post('/api/send-otp', async (req, res) => {
     console.error('CRITICAL EMAIL ERROR:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'L\'envoi de l\'email a échoué. Cause : ' + error.message + '. Vérifiez EMAIL_USER et EMAIL_PASS sur Render.' 
+      message: 'L\'envoi de l\'email a échoué. Cause : ' + error.message,
+      help: 'Vérifiez que vous utilisez un "Mot de passe d\'application" Google et non votre mot de passe habituel.'
     });
   }
 });
