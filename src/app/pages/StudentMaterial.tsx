@@ -14,6 +14,7 @@ interface Material {
   title: string;
   type: string;
   size?: string;
+  url?: string;
 }
 
 interface Request {
@@ -172,14 +173,25 @@ const StudentMaterial: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900">Matériel disponible</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {materials.map((item) => (
-                <Card key={item.id} className="border-0 shadow-sm">
-                  <CardContent className="p-6 flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                      {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
+                <Card key={item.id} className="border-0 shadow-sm overflow-hidden flex flex-col">
+                  {item.url && (
+                    <div className="h-32 w-full overflow-hidden">
+                      <img 
+                        src={item.url} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500">Détails: {item.size || 'Disponible'}</p>
+                  )}
+                  <CardContent className="p-6 flex items-center space-x-4">
+                    {!item.url && (
+                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                        {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-900 truncate">{item.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium">Détails: {item.size || 'Disponible'}</p>
                     </div>
                   </CardContent>
                 </Card>

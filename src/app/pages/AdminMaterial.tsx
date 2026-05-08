@@ -14,6 +14,7 @@ interface Material {
   title: string;
   type: string;
   size?: string;
+  url?: string;
 }
 
 interface Request {
@@ -35,7 +36,8 @@ const AdminMaterial: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     type: 'laptop',
-    size: '1'
+    size: '1',
+    url: ''
   });
 
   useEffect(() => {
@@ -79,6 +81,7 @@ const AdminMaterial: React.FC = () => {
           type: formData.type,
           category: formData.type,
           size: formData.size,
+          url: formData.url,
           date: new Date().toLocaleDateString('fr-FR')
         }),
       });
@@ -86,7 +89,7 @@ const AdminMaterial: React.FC = () => {
       if (data.success) {
         toast.success('Matériel ajouté');
         setIsDialogOpen(false);
-        setFormData({ title: '', type: 'laptop', size: '1' });
+        setFormData({ title: '', type: 'laptop', size: '1', url: '' });
         loadData();
       }
     } catch (error) {
@@ -190,16 +193,23 @@ const AdminMaterial: React.FC = () => {
                         <SelectItem value="electronics">Électronique</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Quantité en stock</Label>
+                   <div className="space-y-2">
+                    <Label>Quantité / Détails</Label>
                     <Input 
                       value={formData.size} 
                       onChange={e => setFormData({...formData, size: e.target.value})} 
-                      placeholder="Ex: 1 unité, XL, 16Go..."
+                      placeholder="Ex: 1 unité, 16Go..."
                       required 
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Lien de la photo (URL)</Label>
+                  <Input 
+                    value={formData.url} 
+                    onChange={e => setFormData({...formData, url: e.target.value})} 
+                    placeholder="https://images.unsplash.com/photo..."
+                  />
                 </div>
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Ajouter à l'inventaire</Button>
               </form>
@@ -266,19 +276,30 @@ const AdminMaterial: React.FC = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Inventaire Actuel</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {materials.map((item) => (
-              <Card key={item.id} className="border-0 shadow-sm relative group overflow-hidden">
-                <CardContent className="p-6">
+              <Card key={item.id} className="border-0 shadow-sm relative group overflow-hidden flex flex-col">
+                {item.url && (
+                  <div className="h-40 w-full overflow-hidden">
+                    <img 
+                      src={item.url} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                )}
+                <CardContent className="p-6 flex-1">
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                      {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{item.title}</h4>
-                      <p className="text-sm text-gray-500">Détails: {item.size}</p>
+                    {!item.url && (
+                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                        {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-gray-900 truncate">{item.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium">Détails: {item.size}</p>
                     </div>
                   </div>
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteMaterial(item.id)}>
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <Button variant="secondary" size="icon" className="bg-white/90 backdrop-blur-sm text-red-500 hover:bg-red-50 hover:text-red-700 shadow-sm" onClick={() => handleDeleteMaterial(item.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
