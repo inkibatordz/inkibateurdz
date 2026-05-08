@@ -143,6 +143,7 @@ const AdminUsers: React.FC = () => {
         body: JSON.stringify({
           ...mentorData,
           role: 'mentor',
+          approved: true,
           status: 'approved' // Mentors created by admin are automatically approved
         }),
       });

@@ -55,13 +55,6 @@ const safeQuery = async (text, params) => {
 const initDb = async () => {
   try {
     await safeQuery(`
-      CREATE TABLE IF NOT EXISTS otps (
-        email TEXT PRIMARY KEY,
-        otp TEXT NOT NULL,
-        expires BIGINT NOT NULL
-      );
-    `);
-    await safeQuery(`
       CREATE TABLE IF NOT EXISTS news (
         id BIGINT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -95,7 +88,7 @@ const initDb = async () => {
         department TEXT,
         level TEXT,
         student_id TEXT,
-        approved BOOLEAN DEFAULT TRUE,
+        approved BOOLEAN DEFAULT FALSE,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -253,90 +246,6 @@ app.post('/api/test-email', async (req, res) => {
   }
 });
 
-app.post('/api/send-otp', async (req, res) => {
-  const { email } = req.body;
-  
-  if (!email) {
-    return res.status(400).json({ success: false, message: 'Email est requis' });
-  }
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = Date.now() + 10 * 60 * 1000;
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('Email variables are missing in /api/send-otp');
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Erreur Configuration : EMAIL_USER ou EMAIL_PASS manquant sur Render.',
-      instructions: 'Allez dans les réglages "Environment" de Render et ajoutez EMAIL_USER (votre gmail) et EMAIL_PASS (le code de 16 lettres).'
-    });
-  }
-
-  try {
-    await pool.query(
-      'INSERT INTO otps (email, otp, expires) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET otp = $2, expires = $3',
-      [email, otp, expires]
-    );
-
-    const mailOptions = {
-      from: `"Incubateur 2TI" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: `${otp} est votre code de vérification`,
-      html: `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border-radius: 24px; background: #f8fafc; border: 1px solid #e2e8f0;">
-          <h2 style="color: #2563eb; font-size: 28px; font-weight: 800; margin-bottom: 24px; text-align: center;">Vérification Email</h2>
-          <p style="color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">Bienvenue sur la plateforme Inkibator. Utilisez le code secret ci-dessous pour finaliser votre inscription :</p>
-          <div style="background: #ffffff; padding: 30px; border-radius: 20px; text-align: center; margin: 32px 0; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <span style="font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #1e40af; font-family: monospace;">${otp}</span>
-          </div>
-          <p style="color: #64748b; font-size: 14px; text-align: center;">Ce code expirera dans 10 minutes pour votre sécurité.</p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;">
-          <p style="color: #94a3b8; font-size: 12px; text-align: center;">© 2026 Tlemcen Tech Incubator - 2TI. Tous droits réservés.</p>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`OTP sent successfully to ${email}`);
-    res.json({ success: true, message: 'Un code de vérification a été envoyé à ' + email });
-  } catch (error) {
-    console.error('CRITICAL EMAIL ERROR:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'L\'envoi de l\'email a échoué. Cause : ' + error.message,
-      help: 'Vérifiez que vous utilisez un "Mot de passe d\'application" Google et non votre mot de passe habituel.'
-    });
-  }
-});
-
-app.post('/api/verify-otp', async (req, res) => {
-  const { email, otp } = req.body;
-  
-  try {
-    const result = await safeQuery('SELECT * FROM otps WHERE email = $1', [email]);
-    const storedData = result.rows[0];
-
-    if (!storedData) {
-      return res.status(400).json({ success: false, message: 'Aucun code trouvé pour cet email' });
-    }
-
-    if (Date.now() > parseInt(storedData.expires)) {
-      await safeQuery('DELETE FROM otps WHERE email = $1', [email]);
-      return res.status(400).json({ success: false, message: 'Code expiré' });
-    }
-
-    if (storedData.otp === otp) {
-      await safeQuery('DELETE FROM otps WHERE email = $1', [email]);
-      res.json({ success: true, message: 'Code vérifié' });
-    } else {
-      res.status(400).json({ success: false, message: 'Code incorrect' });
-    }
-  } catch (err) {
-    console.error('Error verifying OTP:', err.message);
-    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
-  }
-});
-
 // --- News API ---
 app.get('/api/news', async (req, res) => {
   try {
@@ -431,15 +340,32 @@ app.delete('/api/trainings/:id', async (req, res) => {
 
 // --- Auth & Users API ---
 app.post('/api/register', async (req, res) => {
-  const { id, email, password, role, firstName, lastName, department, level, studentId } = req.body;
+  const { id, email, password, role, firstName, lastName, department, level, studentId, approved, status } = req.body;
   try {
+    const isApproved = approved === true || approved === 'true';
+    const initialStatus = status || (isApproved ? 'approved' : 'pending');
+
     await safeQuery(
-      'INSERT INTO users (id, email, password, role, first_name, last_name, department, level, student_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-      [id || Date.now().toString(), email, password, role || 'student', firstName, lastName, department, level, studentId]
+      'INSERT INTO users (id, email, password, role, first_name, last_name, department, level, student_id, approved, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+      [
+        id || Date.now().toString(), 
+        email, 
+        password, 
+        role || 'student', 
+        firstName, 
+        lastName, 
+        department, 
+        level, 
+        studentId,
+        isApproved,
+        initialStatus
+      ]
     );
 
-    // Notify Admin of new registration
-    await createNotification('admin', 'Nouvelle inscription', `L'utilisateur ${firstName} ${lastName} (${email}) vient de s'inscrire et attend votre approbation.`, 'info');
+    // Notify Admin of new registration if it's a student or needs approval
+    if (!isApproved) {
+      await createNotification('admin', 'Nouvelle inscription', `L'utilisateur ${firstName} ${lastName} (${email}) vient de s'inscrire et attend votre approbation.`, 'info');
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -492,7 +418,7 @@ app.put('/api/users/:id/deactivate', async (req, res) => {
     return res.status(403).json({ success: false, message: 'Action interdite' });
   }
   try {
-    await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['pending', id]);
+    await safeQuery('UPDATE users SET status = $1, approved = $2 WHERE id = $3', ['pending', false, id]);
     
     // Notify the user
     await createNotification(id, 'Compte désactivé', 'Votre compte a été désactivé par un administrateur. Contactez le bureau pour plus d\'informations.', 'warning');
@@ -510,7 +436,7 @@ app.put('/api/users/:id/approve', async (req, res) => {
     return res.status(403).json({ success: false, message: 'Action interdite sur le compte administrateur système' });
   }
   try {
-    await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
+    await safeQuery('UPDATE users SET status = $1, approved = $2 WHERE id = $3', ['approved', true, id]);
     
     // Notify the user
     await createNotification(id, 'Compte approuvé', 'Félicitations ! Votre compte a été approuvé. Vous pouvez maintenant accéder à toutes les fonctionnalités.', 'success');
@@ -558,7 +484,14 @@ app.post('/api/login', async (req, res) => {
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      
+      // Block unapproved students
+      if (user.role === 'student' && user.status !== 'approved') {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Votre compte est en attente d'approbation par l'administration. Vous recevrez une notification une fois validé." 
+        });
+      }
+
       // Notify Admin of student login
       if (user.role === 'student') {
         await createNotification('admin', 'Connexion étudiant', `L'étudiant ${user.first_name} ${user.last_name} vient de se connecter.`, 'info');
@@ -574,7 +507,9 @@ app.post('/api/login', async (req, res) => {
           lastName: user.last_name,
           department: user.department,
           level: user.level,
-          studentId: user.student_id
+          studentId: user.student_id,
+          status: user.status,
+          approved: user.status === 'approved'
         } 
       });
     } else {

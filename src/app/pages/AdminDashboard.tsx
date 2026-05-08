@@ -183,7 +183,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="min-w-0">
                       <h3 className="text-2xl font-black tracking-tighter mb-2">Santé du Système</h3>
                       <p className="text-blue-100/60 text-sm font-medium leading-relaxed max-w-xs">
-                        Vérifiez l'état des services de notification et d'authentification OTP.
+                        Vérifiez l'état des services de notification et d'approbation des comptes.
                       </p>
                     </div>
                   </div>
