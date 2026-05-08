@@ -134,6 +134,49 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </div>
 
+        {/* System Health Section */}
+        <div className="mt-8">
+          <Card className="border-0 shadow-sm bg-gradient-to-r from-gray-900 to-slate-800 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+            <CardContent className="p-8 relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
+                    <Mail className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Santé du Système Email</h3>
+                    <p className="text-gray-400 text-sm font-medium">Vérifiez si les notifications et codes OTP fonctionnent.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl px-6"
+                    onClick={async () => {
+                      const email = prompt("Entrez un email pour tester l'envoi :");
+                      if (!email) return;
+                      try {
+                        const res = await fetch('/api/test-email', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email })
+                        });
+                        const data = await res.json();
+                        if (data.success) alert("✅ Succès ! L'email de test est parti.");
+                        else alert("❌ Échec : " + data.message + "\n\nGuide : " + (data.setup_guide || "Vérifiez Render."));
+                      } catch (e) {
+                        alert("❌ Erreur de connexion au serveur.");
+                      }
+                    }}
+                  >
+                    Tester l'envoi
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-0 shadow-sm">
