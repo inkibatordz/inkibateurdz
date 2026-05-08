@@ -615,7 +615,9 @@ app.get('/api/projects', async (req, res) => {
     const result = await safeQuery(queryText, params);
     res.json({ success: true, projects: result.rows });
   } catch (err) {
-    console.error('Error fetching projects:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
 
 app.put('/api/projects/:id/status', async (req, res) => {
   const id = req.params.id;
