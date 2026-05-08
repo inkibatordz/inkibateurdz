@@ -130,6 +130,19 @@
   html {
     font-size: var(--font-size);
     font-family: var(--font-family);
+    /* Safe area padding for notches */
+    padding-top: env(safe-area-inset-top);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    scroll-behavior: smooth;
+    /* Native App Feel */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 
   h1 {
