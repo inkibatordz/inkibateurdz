@@ -121,9 +121,17 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleDeactivate = async (userId: string) => {
-    // For now, deactivation is just setting status back to pending or similar
-    // We can reuse a general update status endpoint if needed
-    toast.info('Fonctionnalité de désactivation en cours de développement');
+    if (!window.confirm('Voulez-vous vraiment désactiver ce compte ? L\'utilisateur devra être ré-approuvé pour accéder au système.')) return;
+    try {
+      const res = await fetch(`/api/users/${userId}/deactivate`, { method: 'PUT' });
+      const data = await res.json();
+      if (data.success) {
+        loadUsers();
+        toast.success('Utilisateur désactivé');
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la désactivation');
+    }
   };
 
   const handleCreateMentor = async (e: React.FormEvent) => {

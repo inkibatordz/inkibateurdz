@@ -437,6 +437,10 @@ app.post('/api/register', async (req, res) => {
       'INSERT INTO users (id, email, password, role, first_name, last_name, department, level, student_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [id || Date.now().toString(), email, password, role || 'student', firstName, lastName, department, level, studentId]
     );
+
+    // Notify Admin of new registration
+    await createNotification('admin', 'Nouvelle inscription', `L'utilisateur ${firstName} ${lastName} (${email}) vient de s'inscrire et attend votre approbation.`, 'info');
+
     res.json({ success: true });
   } catch (err) {
     console.error('Registration error:', err.message);
@@ -445,6 +449,21 @@ app.post('/api/register', async (req, res) => {
 });
 
 // --- Users Management API (Admin only) ---
+// Helper to create notifications
+async function createNotification(userId, title, message, type = 'info') {
+  try {
+    const id = Date.now().toString();
+    await safeQuery(
+      'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, $5)',
+      [id, userId, title, message, type]
+    );
+    return true;
+  } catch (err) {
+    console.error('Error creating notification:', err.message);
+    return false;
+  }
+}
+
 app.get('/api/users', async (req, res) => {
   try {
     const result = await safeQuery('SELECT * FROM users ORDER BY created_at DESC');
@@ -467,6 +486,24 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+app.put('/api/users/:id/deactivate', async (req, res) => {
+  const id = req.params.id;
+  if (id === 'admin') {
+    return res.status(403).json({ success: false, message: 'Action interdite' });
+  }
+  try {
+    await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['pending', id]);
+    
+    // Notify the user
+    await createNotification(id, 'Compte désactivé', 'Votre compte a été désactivé par un administrateur. Contactez le bureau pour plus d\'informations.', 'warning');
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deactivating user:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 app.put('/api/users/:id/approve', async (req, res) => {
   const id = req.params.id;
   if (id === 'admin') {
@@ -474,6 +511,10 @@ app.put('/api/users/:id/approve', async (req, res) => {
   }
   try {
     await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
+    
+    // Notify the user
+    await createNotification(id, 'Compte approuvé', 'Félicitations ! Votre compte a été approuvé. Vous pouvez maintenant accéder à toutes les fonctionnalités.', 'success');
+    
     res.json({ success: true });
   } catch (err) {
     console.error('Error approving user:', err.message);
@@ -517,6 +558,12 @@ app.post('/api/login', async (req, res) => {
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
+      
+      // Notify Admin of student login
+      if (user.role === 'student') {
+        await createNotification('admin', 'Connexion étudiant', `L'étudiant ${user.first_name} ${user.last_name} vient de se connecter.`, 'info');
+      }
+
       res.json({ 
         success: true, 
         user: { 
@@ -536,6 +583,33 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+// --- Notifications API ---
+app.get('/api/notifications', async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ success: false, message: 'userId requis' });
+  try {
+    const result = await safeQuery(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      [userId]
+    );
+    res.json({ success: true, notifications: result.rows });
+  } catch (err) {
+    console.error('Error fetching notifications:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await safeQuery('UPDATE notifications SET is_read = true WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error marking notification as read:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
 
