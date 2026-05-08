@@ -23,7 +23,6 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  loginWithGoogle: (userData: Partial<User>) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   register: (userData: any) => Promise<{ success: boolean; message?: string }>;
   isAuthenticated: boolean;
@@ -66,8 +65,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success) {
-        setUser(data.user);
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        const loggedUser = data.user;
+        
+        // Block students who are not approved
+        if (loggedUser.role === 'student' && !loggedUser.approved) {
+          return { 
+            success: false, 
+            message: "Votre compte est en attente d'approbation. Vous recevrez un e-mail une fois validé par l'administration." 
+          };
+        }
+
+        setUser(loggedUser);
+        localStorage.setItem('currentUser', JSON.stringify(loggedUser));
         return { success: true };
       } else {
         return { success: false, message: data.message || 'Email ou mot de passe incorrect' };
@@ -75,43 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, message: 'Erreur de connexion au serveur' };
-    }
-  };
-  
-  const loginWithGoogle = async (googleData: Partial<User>): Promise<{ success: boolean; message?: string }> => {
-    // For simplicity, we'll try to register/login via a dedicated google endpoint or just reuse register
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: googleData.email, isGoogle: true }), // Server needs to handle this
-      });
-      const data = await res.json();
-      if (data.success) {
-        setUser(data.user);
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        // Auto register if not found
-        const registerRes = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: googleData.email,
-            firstName: googleData.firstName,
-            lastName: googleData.lastName,
-            role: 'student',
-            password: 'google-auth-no-password'
-          }),
-        });
-        const registerData = await registerRes.json();
-        if (registerData.success) {
-           return { success: false, message: 'Compte créé via Google. Vous pouvez maintenant vous connecter.' };
-        }
-        return { success: false, message: 'Erreur lors de la connexion Google' };
-      }
-    } catch (error) {
-      return { success: false, message: 'Erreur serveur' };
     }
   };
 
