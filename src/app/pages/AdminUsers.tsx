@@ -413,11 +413,9 @@ const AdminUsers: React.FC = () => {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default AdminUsers;
