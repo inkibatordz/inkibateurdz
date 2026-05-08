@@ -100,11 +100,20 @@ const AdminTrainings: React.FC = () => {
     }
   };
 
-  const handleSendNotification = (title: string) => {
-    // Basic mockup for sending notifications
-    toast.success('Notification envoyée aux étudiants', {
-      description: `Concernant: ${title}`
-    });
+  const handleSendNotification = async (id: string, title: string) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/trainings/${id}/notify`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Notifications envoyées', {
+          description: `Tous les étudiants ont été informés de la formation: ${title}`
+        });
+      } else {
+        toast.error('Échec de l\'envoi des notifications');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
+    }
   };
 
   return (
@@ -182,7 +191,7 @@ const AdminTrainings: React.FC = () => {
                 <div className="flex space-x-2">
                   <Button 
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleSendNotification(formation.title)}
+                    onClick={() => handleSendNotification(formation.id, formation.title)}
                   >
                     <Bell className="w-4 h-4 mr-2" />
                     Notifier les étudiants

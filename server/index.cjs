@@ -330,11 +330,37 @@ app.post('/api/trainings', async (req, res) => {
 app.delete('/api/trainings/:id', async (req, res) => {
   const id = req.params.id;
   try {
+    // Delete registrations first
+    await safeQuery('DELETE FROM training_registrations WHERE training_id = $1', [id]);
     await safeQuery('DELETE FROM trainings WHERE id = $1', [id]);
     res.json({ success: true, message: 'Formation supprimée' });
   } catch (err) {
     console.error('Error deleting training:', err.message);
     res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+app.post('/api/trainings/:id/notify', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const trainingRes = await safeQuery('SELECT title, date, time FROM trainings WHERE id = $1', [id]);
+    if (trainingRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Formation non trouvée' });
+    
+    const { title, date, time } = trainingRes.rows[0];
+    const studentsRes = await safeQuery('SELECT id FROM users WHERE role = $1 AND status = $2', ['student', 'approved']);
+    
+    const notifications = studentsRes.rows.map(student => 
+      safeQuery(
+        'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, $5)',
+        [`notif-${Date.now()}-${student.id.slice(-4)}`, student.id, 'Nouvelle Formation', `La formation "${title}" est prévue le ${new Date(date).toLocaleDateString('fr-FR')} à ${time}. Inscrivez-vous vite !`, 'info']
+      )
+    );
+    
+    await Promise.all(notifications);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error sending training notifications:', err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
