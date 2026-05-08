@@ -23,45 +23,43 @@ const StudentTrainings: React.FC = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
-    const storedFormations = JSON.parse(localStorage.getItem('formations') || 'null');
-    if (storedFormations && storedFormations.length > 0) {
-      setFormations(storedFormations);
-    } else {
-      const defaultFormations = [
-        {
-          id: 'f1',
-          title: 'Pitch Perfect: Comment convaincre les investisseurs',
-          description: 'Apprenez les techniques pour structurer votre pitch et capter l\'attention.',
-          date: '2026-03-01',
-          time: '10:00 - 12:00',
-          location: 'Amphi Innovation',
-          instructor: 'Jean Dupont',
-          totalSpots: 30,
-          availableSpots: 12
-        },
-        {
-          id: 'f2',
-          title: 'Marketing Digital pour Startups',
-          description: 'Les fondamentaux pour lancer votre marque sur les réseaux sociaux.',
-          date: '2026-03-05',
-          time: '14:00 - 17:00',
-          location: 'Salle 4B',
-          instructor: 'Marie Lambert',
-          totalSpots: 20,
-          availableSpots: 0
-        }
-      ];
-      localStorage.setItem('formations', JSON.stringify(defaultFormations));
-      setFormations(defaultFormations);
-    }
-  }, []);
+    fetchData();
+  }, [user]);
 
-  const handleRegister = (id: string) => {
-    setRegistered([...registered, id]);
-    const updatedFormations = formations.map(f => f.id === id ? { ...f, availableSpots: f.availableSpots - 1 } : f);
-    setFormations(updatedFormations);
-    localStorage.setItem('formations', JSON.stringify(updatedFormations));
-    toast.success('Inscription réussie !', { description: 'Vous recevrez un rappel la veille.' });
+  const fetchData = async () => {
+    try {
+      const trainRes = await fetch('/api/trainings');
+      const trainData = await trainRes.json();
+      if (trainData.success) setFormations(trainData.trainings);
+
+      if (user) {
+        const regRes = await fetch(`/api/trainings/my-registrations?studentId=${user.id}`);
+        const regData = await regRes.json();
+        if (regData.success) setRegistered(regData.registrations);
+      }
+    } catch (error) {
+      toast.error('Erreur de chargement');
+    }
+  };
+
+  const handleRegister = async (id: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/trainings/${id}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: user.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Inscription réussie !', { description: 'Vous recevrez un rappel la veille.' });
+        fetchData();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
+    }
   };
 
   const handleToggleNotifications = () => {

@@ -137,6 +137,64 @@ const initDb = async () => {
       END $$;
     `);
 
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS material_requests (
+        id TEXT PRIMARY KEY,
+        material_name TEXT NOT NULL,
+        student_id TEXT NOT NULL REFERENCES users(id),
+        project_title TEXT,
+        supervisor TEXT,
+        status TEXT DEFAULT 'pending',
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS materials (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL,
+        category TEXT NOT NULL,
+        size TEXT,
+        date TEXT,
+        url TEXT
+      );
+    `);
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await safeQuery(`
+      CREATE TABLE IF NOT EXISTS training_registrations (
+        training_id TEXT NOT NULL REFERENCES trainings(id),
+        student_id TEXT NOT NULL REFERENCES users(id),
+        registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (training_id, student_id)
+      );
+    `);
+
+    // Migrations for existing projects table
+    await safeQuery(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='progress') THEN
+          ALTER TABLE projects ADD COLUMN progress INTEGER DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='mentor_feedback') THEN
+          ALTER TABLE projects ADD COLUMN mentor_feedback TEXT;
+        END IF;
+      END $$;
+    `);
+
     // Add default admin if no users exist
     const userCountResult = await safeQuery('SELECT COUNT(*) FROM users');
     if (parseInt(userCountResult.rows[0].count) === 0) {
@@ -548,6 +606,198 @@ app.put('/api/projects/:id/assign-mentor', async (req, res) => {
     res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
+
+// --- Material Requests API ---
+app.get('/api/material-requests', async (req, res) => {
+  const { studentId } = req.query;
+  try {
+    let queryText = 'SELECT mr.*, u.first_name, u.last_name FROM material_requests mr JOIN users u ON mr.student_id = u.id';
+    let params = [];
+    if (studentId) {
+      queryText += ' WHERE mr.student_id = $1';
+      params.push(studentId);
+    }
+    queryText += ' ORDER BY mr.date DESC';
+    const result = await safeQuery(queryText, params);
+    res.json({ success: true, requests: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/material-requests', async (req, res) => {
+  const { materialName, studentId, projectTitle, supervisor } = req.body;
+  try {
+    await safeQuery(
+      'INSERT INTO material_requests (id, material_name, student_id, project_title, supervisor) VALUES ($1, $2, $3, $4, $5)',
+      [`req-${Date.now()}`, materialName, studentId, projectTitle, supervisor]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/material-requests/:id/status', async (req, res) => {
+  const { status } = req.body;
+  try {
+    await safeQuery('UPDATE material_requests SET status = $1 WHERE id = $2', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Materials API ---
+app.get('/api/materials', async (req, res) => {
+  try {
+    const result = await safeQuery('SELECT * FROM materials ORDER BY date DESC');
+    res.json({ success: true, materials: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/materials', async (req, res) => {
+  const { id, title, type, category, size, date, url } = req.body;
+  try {
+    await safeQuery(
+      'INSERT INTO materials (id, title, type, category, size, date, url) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [id || `mat-${Date.now()}`, title, type, category, size, date || new Date().toISOString(), url]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/materials/:id', async (req, res) => {
+  try {
+    await safeQuery('DELETE FROM materials WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Notifications API ---
+app.get('/api/notifications', async (req, res) => {
+  const { userId } = req.query;
+  try {
+    const result = await safeQuery('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+    res.json({ success: true, notifications: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/notifications', async (req, res) => {
+  const { userId, title, message, type } = req.body;
+  try {
+    await safeQuery(
+      'INSERT INTO notifications (id, user_id, title, message, type) VALUES ($1, $2, $3, $4, $5)',
+      [`notif-${Date.now()}`, userId, title, message, type || 'info']
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  try {
+    await safeQuery('UPDATE notifications SET is_read = TRUE WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Training Registrations ---
+app.post('/api/trainings/:id/register', async (req, res) => {
+  const trainingId = req.params.id;
+  const { studentId } = req.body;
+  try {
+    // Check if already registered
+    const check = await safeQuery('SELECT 1 FROM training_registrations WHERE training_id = $1 AND student_id = $2', [trainingId, studentId]);
+    if (check.rows.length > 0) return res.status(400).json({ success: false, message: 'Déjà inscrit' });
+
+    // Check availability
+    const training = await safeQuery('SELECT available_spots FROM trainings WHERE id = $1', [trainingId]);
+    if (training.rows[0].available_spots <= 0) return res.status(400).json({ success: false, message: 'Formation complète' });
+
+    await safeQuery('BEGIN');
+    await safeQuery('INSERT INTO training_registrations (training_id, student_id) VALUES ($1, $2)', [trainingId, studentId]);
+    await safeQuery('UPDATE trainings SET available_spots = available_spots - 1 WHERE id = $1', [trainingId]);
+    await safeQuery('COMMIT');
+
+    res.json({ success: true });
+  } catch (err) {
+    await safeQuery('ROLLBACK');
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/trainings/my-registrations', async (req, res) => {
+  const { studentId } = req.query;
+  try {
+    const result = await safeQuery('SELECT training_id FROM training_registrations WHERE student_id = $1', [studentId]);
+    res.json({ success: true, registrations: result.rows.map(r => r.training_id) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Dashboard Statistics ---
+app.get('/api/stats', async (req, res) => {
+  try {
+    const usersCount = await safeQuery('SELECT COUNT(*) FROM users');
+    const projectsCount = await safeQuery('SELECT COUNT(*) FROM projects');
+    const trainingsCount = await safeQuery('SELECT COUNT(*) FROM trainings');
+    const pendingUsers = await safeQuery('SELECT COUNT(*) FROM users WHERE status = $1', ['pending']);
+    
+    res.json({
+      success: true,
+      stats: {
+        totalUsers: parseInt(usersCount.rows[0].count),
+        totalProjects: parseInt(projectsCount.rows[0].count),
+        totalTrainings: parseInt(trainingsCount.rows[0].count),
+        pendingUsers: parseInt(pendingUsers.rows[0].count)
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// --- Profile Update ---
+app.put('/api/users/:id', async (req, res) => {
+  const { firstName, lastName, department, level, university } = req.body;
+  try {
+    await safeQuery(
+      'UPDATE users SET first_name = $1, last_name = $2, department = $3, level = $4 WHERE id = $5',
+      [firstName, lastName, department, level, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update project progress/feedback
+app.put('/api/projects/:id/mentor-update', async (req, res) => {
+  const { progress, feedback } = req.body;
+  try {
+    await safeQuery(
+      'UPDATE projects SET progress = $1, mentor_feedback = $2 WHERE id = $3',
+      [progress, feedback, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 
 
 const PORT = process.env.PORT || 3001;

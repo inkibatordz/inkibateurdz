@@ -39,48 +39,63 @@ const StudentMaterial: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
 
   useEffect(() => {
-    // Load materials
-    const storedMaterials = JSON.parse(localStorage.getItem('materials') || 'null');
-    if (storedMaterials) {
-      setMaterials(storedMaterials);
-    } else {
-      const defaultMaterials: Material[] = [
-        { id: 'm1', name: 'MacBook Pro M2', type: 'laptop', availableCount: 5 },
-        { id: 'm2', name: 'Casque VR Meta Quest 3', type: 'vr', availableCount: 2 },
-        { id: 'm3', name: 'Kit Arduino Mega', type: 'electronics', availableCount: 10 },
-        { id: 'm4', name: 'Serveur Jetson Nano', type: 'server', availableCount: 0 }
-      ];
-      localStorage.setItem('materials', JSON.stringify(defaultMaterials));
-      setMaterials(defaultMaterials);
-    }
-
-    // Load requests for current student
-    const allRequests = JSON.parse(localStorage.getItem('materialRequests') || '[]');
-    const userRequests = allRequests.filter((r: any) => r.studentId === user?.id);
-    setRequests(userRequests);
+    fetchData();
   }, [user]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const fetchData = async () => {
+    try {
+      const matRes = await fetch('/api/materials');
+      const matData = await matRes.json();
+      if (matData.success) setMaterials(matData.materials);
+
+      if (user) {
+        const reqRes = await fetch(`/api/material-requests?studentId=${user.id}`);
+        const reqData = await reqRes.json();
+        if (reqData.success) {
+          const mappedRequests = reqData.requests.map((r: any) => ({
+            id: r.id,
+            materialName: r.material_name,
+            studentName: `${r.first_name} ${r.last_name}`,
+            projectTitle: r.project_title,
+            supervisor: r.supervisor,
+            status: r.status,
+            date: r.date
+          }));
+          setRequests(mappedRequests);
+        }
+      }
+    } catch (error) {
+      toast.error('Erreur de chargement');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newRequest: Request = {
-      id: `req-${Date.now()}`,
-      materialName: formData.materialName,
-      studentName: `${user?.firstName} ${user?.lastName}`,
-      studentId: user?.id,
-      projectTitle: formData.projectTitle,
-      supervisor: formData.supervisor,
-      status: 'pending',
-      date: new Date().toISOString()
-    };
+    if (!user) return;
 
-    const allRequests = JSON.parse(localStorage.getItem('materialRequests') || '[]');
-    allRequests.push(newRequest);
-    localStorage.setItem('materialRequests', JSON.stringify(allRequests));
-
-    setRequests([...requests, newRequest]);
-    setIsDialogOpen(false);
-    setFormData({ materialName: '', projectTitle: '', supervisor: '' });
-    toast.success('Demande envoyée avec succès', { description: 'L\'administrateur va examiner votre requête.' });
+    try {
+      const res = await fetch('/api/material-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          materialName: formData.materialName,
+          studentId: user.id,
+          projectTitle: formData.projectTitle,
+          supervisor: formData.supervisor
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Demande envoyée avec succès');
+        setIsDialogOpen(false);
+        setFormData({ materialName: '', projectTitle: '', supervisor: '' });
+        fetchData();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion');
+    }
   };
 
   const getStatusBadge = (status: string) => {

@@ -12,15 +12,28 @@ const StudentProfile: React.FC = () => {
 
   const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
 
-  const stats = (() => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const myProjects = allProjects.filter((p: any) => p.studentId === user.id);
-    return {
-      total: myProjects.length,
-      pending: myProjects.filter((p: any) => p.status === 'pending').length,
-      accepted: myProjects.filter((p: any) => p.status === 'accepted' || p.status === 'incubation').length,
+  const [stats, setStats] = useState({ total: 0, pending: 0, accepted: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch(`/api/projects?studentId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          const myProjects = data.projects;
+          setStats({
+            total: myProjects.length,
+            pending: myProjects.filter((p: any) => p.status === 'pending').length,
+            accepted: myProjects.filter((p: any) => p.status === 'accepted' || p.status === 'incubation').length,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile stats:', error);
+      }
     };
-  })();
+    fetchStats();
+  }, [user]);
 
   return (
     <div>

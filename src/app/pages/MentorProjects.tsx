@@ -37,58 +37,67 @@ const MentorProjects: React.FC = () => {
     loadProjects();
   }, [user]);
 
-  const loadProjects = () => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const assignedProjects = allProjects.filter((p: Project) => p.mentorId === user?.id);
-    setProjects(assignedProjects);
-  };
-
-  const updateProject = (projectId: string, updates: Partial<Project>) => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const updatedProjects = allProjects.map((p: Project) => 
-      p.id === projectId ? { ...p, ...updates } : p
-    );
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    loadProjects();
-    if (selectedProject) {
-      setSelectedProject({ ...selectedProject, ...updates });
+  const loadProjects = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/projects?mentorId=${user.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      toast.error('Erreur de chargement des projets');
     }
   };
 
-  const handleUpdateFeedback = () => {
+  const updateProjectOnServer = async (projectId: string, updates: { progress?: number, feedback?: string }) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/mentor-update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadProjects();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      toast.error('Erreur de connexion');
+      return false;
+    }
+  };
+
+  const handleUpdateFeedback = async () => {
     if (!selectedProject) return;
-    updateProject(selectedProject.id, { mentorFeedback: feedback });
-    toast.success('Feedback mis à jour');
+    const success = await updateProjectOnServer(selectedProject.id, { feedback });
+    if (success) {
+      toast.success('Feedback mis à jour');
+      setSelectedProject({ ...selectedProject, mentorFeedback: feedback });
+    }
   };
 
   const handleScheduleMeeting = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProject || !meetingDate || !meetingTime) return;
-    
-    // Create combined date object
-    const dateTimeString = `${meetingDate}T${meetingTime}`;
-    
-    updateProject(selectedProject.id, { 
-      meetingSchedule: { 
-        date: dateTimeString, 
-        organizer: `${user?.firstName} ${user?.lastName}` 
-      } 
-    });
-    
+    // Meeting schedule logic is still client-side for now or needs a table
+    // Let's keep it mock for now or implement a table later.
+    toast.info('Fonctionnalité en cours de migration...');
     setIsMeetingDialogOpen(false);
-    toast.success('Rendez-vous planifié avec succès');
   };
 
-  const handleUpdateProgress = (progressValue: string) => {
+  const handleUpdateProgress = async (progressValue: string) => {
     if (!selectedProject) return;
-    updateProject(selectedProject.id, { progress: parseInt(progressValue) });
-    toast.success('Progression mise à jour');
+    const prog = parseInt(progressValue);
+    const success = await updateProjectOnServer(selectedProject.id, { progress: prog });
+    if (success) {
+      toast.success('Progression mise à jour');
+      setSelectedProject({ ...selectedProject, progress: prog });
+    }
   };
 
-  const getStudentName = (studentId: string) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const student = users.find((u: any) => u.id === studentId);
-    return student ? `${student.firstName} ${student.lastName}` : 'Inconnu';
+  const getStudentName = (project: Project) => {
+    return (project as any).studentName || 'Inconnu';
   };
 
   const getStatusBadge = (status: string) => {

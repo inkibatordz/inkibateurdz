@@ -37,34 +37,46 @@ const StudentProjects: React.FC = () => {
     loadProjects();
   }, [user]);
 
-  const loadProjects = () => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const userProjects = allProjects.filter((p: Project) => p.studentId === user?.id);
-    setProjects(userProjects);
+  const loadProjects = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/projects?studentId=${user.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      toast.error('Erreur lors du chargement des projets');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newProject: Project = {
-      id: `project-${Date.now()}`,
-      studentId: user?.id || '',
+    const projectData = {
       title: formData.title,
-      fileCtt: formData.fileCtt || 'cahier-des-charges.pdf',
-      status: 'pending',
-      submittedDate: new Date().toISOString(),
-      progress: 0,
-      mentorFeedback: ''
+      studentId: user?.id,
+      description: 'Nouveau projet soumis via la plateforme', // Default description
     };
 
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    allProjects.push(newProject);
-    localStorage.setItem('projects', JSON.stringify(allProjects));
-
-    setProjects([...projects, newProject]);
-    setIsDialogOpen(false);
-    setFormData({ title: '', fileCtt: '' });
-    toast.success('Projet soumis avec succès !');
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Projet soumis avec succès !');
+        setIsDialogOpen(false);
+        setFormData({ title: '', fileCtt: '' });
+        loadProjects();
+      } else {
+        toast.error(data.message || 'Erreur lors de la soumission');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion au serveur');
+    }
   };
 
   const getStatusColor = (status: string) => {

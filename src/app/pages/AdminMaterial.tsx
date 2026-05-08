@@ -42,55 +42,101 @@ const AdminMaterial: React.FC = () => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const storedMaterials = JSON.parse(localStorage.getItem('materials') || '[]');
-    setMaterials(storedMaterials);
-    const storedRequests = JSON.parse(localStorage.getItem('materialRequests') || '[]');
-    setRequests(storedRequests.sort((a: Request, b: Request) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  const loadData = async () => {
+    try {
+      const matRes = await fetch('/api/materials');
+      const matData = await matRes.json();
+      if (matData.success) setMaterials(matData.materials);
+
+      const reqRes = await fetch('/api/material-requests');
+      const reqData = await reqRes.json();
+      if (reqData.success) {
+        const mappedRequests = reqData.requests.map((r: any) => ({
+          id: r.id,
+          materialName: r.material_name,
+          studentName: `${r.first_name} ${r.last_name}`,
+          studentId: r.student_id,
+          projectTitle: r.project_title,
+          supervisor: r.supervisor,
+          status: r.status,
+          date: r.date
+        }));
+        setRequests(mappedRequests);
+      }
+    } catch (error) {
+      toast.error('Erreur de chargement');
+    }
   };
 
-  const handleAddMaterial = (e: React.FormEvent) => {
+  const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newMaterial: Material = {
-      id: `m-${Date.now()}`,
-      name: formData.name,
-      type: formData.type,
-      availableCount: Number(formData.availableCount)
-    };
-
-    const updatedMaterials = [...materials, newMaterial];
-    localStorage.setItem('materials', JSON.stringify(updatedMaterials));
-    setMaterials(updatedMaterials);
-    setIsDialogOpen(false);
-    setFormData({ name: '', type: 'laptop', availableCount: 1 });
-    toast.success('Matériel ajouté à l\'inventaire');
+    try {
+      const res = await fetch('/api/materials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.name,
+          type: formData.type,
+          category: formData.type, // Category same as type for now
+          size: 'N/A',
+          availableCount: Number(formData.availableCount)
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Matériel ajouté');
+        setIsDialogOpen(false);
+        setFormData({ name: '', type: 'laptop', availableCount: 1 });
+        loadData();
+      }
+    } catch (error) {
+      toast.error('Erreur lors de l\'ajout');
+    }
   };
 
-  const handleDeleteMaterial = (id: string) => {
-    const updatedMaterials = materials.filter(m => m.id !== id);
-    localStorage.setItem('materials', JSON.stringify(updatedMaterials));
-    setMaterials(updatedMaterials);
-    toast.success('Matériel supprimé de l\'inventaire');
+  const handleDeleteMaterial = async (id: string) => {
+    if (!window.confirm('Supprimer ce matériel ?')) return;
+    try {
+      await fetch(`/api/materials/${id}`, { method: 'DELETE' });
+      toast.success('Matériel supprimé');
+      loadData();
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
-  const handleApproveRequest = (reqId: string) => {
-    // Check if we can decrease stock based on name match (basic implementation)
-    const req = requests.find(r => r.id === reqId);
-    if (!req) return;
-
-    // Optional: you could try to match by name and decrease stock or the admin manages stock manually.
-    // Let's just approve it for the MVP
-    const updatedRequests = requests.map(r => r.id === reqId ? { ...r, status: 'approved' as const } : r);
-    localStorage.setItem('materialRequests', JSON.stringify(updatedRequests));
-    setRequests(updatedRequests);
-    toast.success('Demande approuvée (Réservée)');
+  const handleApproveRequest = async (reqId: string) => {
+    try {
+      const res = await fetch(`/api/material-requests/${reqId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Demande approuvée');
+        loadData();
+      }
+    } catch (error) {
+      toast.error('Erreur');
+    }
   };
 
-  const handleRejectRequest = (reqId: string) => {
-    const updatedRequests = requests.map(r => r.id === reqId ? { ...r, status: 'rejected' as const } : r);
-    localStorage.setItem('materialRequests', JSON.stringify(updatedRequests));
-    setRequests(updatedRequests);
-    toast.success('Demande rejetée');
+  const handleRejectRequest = async (reqId: string) => {
+    try {
+      const res = await fetch(`/api/material-requests/${reqId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Demande rejetée');
+        loadData();
+      }
+    } catch (error) {
+      toast.error('Erreur');
+    }
   };
 
   const getStatusBadge = (status: string) => {

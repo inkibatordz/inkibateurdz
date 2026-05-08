@@ -65,10 +65,20 @@ const AdminStatistics: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    const storedProjects: Project[] = JSON.parse(localStorage.getItem('projects') || '[]');
-    const storedUsers: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    setProjects(storedProjects);
-    setUsers(storedUsers);
+    const fetchData = async () => {
+      try {
+        const projRes = await fetch('/api/projects');
+        const projData = await projRes.json();
+        if (projData.success) setProjects(projData.projects);
+
+        const usersRes = await fetch('/api/users');
+        const usersData = await usersRes.json();
+        if (usersData.success) setUsers(usersData.users);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+    fetchData();
   }, []);
 
   // Project stats
