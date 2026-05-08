@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Logo from '../components/Logo';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';

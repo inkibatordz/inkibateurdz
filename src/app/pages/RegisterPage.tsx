@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { motion } from 'framer-motion';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
