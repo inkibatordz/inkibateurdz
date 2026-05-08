@@ -19,53 +19,90 @@ const MentorMentorship: React.FC = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const myProjects = allProjects.filter((p: any) => p.mentorId === user?.id && (p.status === 'accepted' || p.status === 'incubation'));
-    
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    const myStudents = myProjects.map((p: any) => allUsers.find((u: any) => u.id === p.studentId)).filter(Boolean);
-    
-    const uniqueStudents = myStudents.filter((v:any,i:any,a:any)=>a.findIndex((t:any)=>(t.id === v.id))===i);
-    setStudents(uniqueStudents);
-    if (uniqueStudents.length > 0) {
-      setSelectedStudent(uniqueStudents[0]);
+    if (user) {
+      loadStudents();
     }
   }, [user]);
 
-  useEffect(() => {
-    if (selectedStudent && user) {
-      const chatId = `${selectedStudent.id}-${user.id}`;
-      const allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-      setMessages(allMessages.filter((m: Message) => m.chatId === chatId));
-    } else {
-      setMessages([]);
+  const loadStudents = async () => {
+    try {
+      const res = await fetch(`/api/projects?mentorId=${user?.id}`);
+      const data = await res.json();
+      if (data.success) {
+        // Extract unique students from projects
+        const studentMap = new Map();
+        data.projects.forEach((p: any) => {
+          if (p.student_id) {
+            studentMap.set(p.student_id, {
+              id: p.student_id,
+              firstName: p.student_first_name,
+              lastName: p.student_last_name,
+              projectId: p.id,
+              projectTitle: p.title
+            });
+          }
+        });
+        const uniqueStudents = Array.from(studentMap.values());
+        setStudents(uniqueStudents);
+        if (uniqueStudents.length > 0 && !selectedStudent) {
+          setSelectedStudent(uniqueStudents[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading students:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [selectedStudent, user]);
+  };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedStudent]);
+
+  const fetchMessages = async () => {
+    if (!selectedStudent) return;
+    try {
+      const res = await fetch(`/api/messages/${selectedStudent.projectId}`);
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.messages);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedStudent || !user) return;
 
-    const chatId = `${selectedStudent.id}-${user.id}`;
-    const message: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: user.id,
-      senderRole: 'mentor',
-      text: newMessage,
-      timestamp: new Date().toISOString(),
-      chatId
-    };
-
-    const allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
-    allMessages.push(message);
-    localStorage.setItem('messages', JSON.stringify(allMessages));
-
-    setMessages([...messages, message]);
-    setNewMessage('');
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: selectedStudent.projectId,
+          senderId: user.id,
+          content: newMessage.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewMessage('');
+        fetchMessages();
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const getInitials = (firstName: string, lastName: string) => {
@@ -131,13 +168,13 @@ const MentorMentorship: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
                   {messages.length > 0 ? messages.map((msg) => {
-                    const isMe = msg.senderRole === 'mentor';
+                    const isMe = msg.sender_id === user?.id;
                     return (
                       <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[75%] rounded-2xl p-3 ${isMe ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white border rounded-bl-sm shadow-sm'}`}>
-                          <p className="text-sm">{msg.text}</p>
+                          <p className="text-sm">{msg.content}</p>
                           <span className={`text-[10px] mt-1 block ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
-                            {new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                       </div>
