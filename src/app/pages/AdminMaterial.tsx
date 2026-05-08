@@ -193,7 +193,8 @@ const AdminMaterial: React.FC = () => {
                         <SelectItem value="electronics">Électronique</SelectItem>
                       </SelectContent>
                     </Select>
-                   <div className="space-y-2">
+                  </div>
+                  <div className="space-y-2">
                     <Label>Quantité / Détails</Label>
                     <Input 
                       value={formData.size} 
