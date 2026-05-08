@@ -101,20 +101,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <Logo className="w-10 h-10" />
+    <div className="flex flex-col h-full bg-white/80 backdrop-blur-xl border-r border-gray-100">
+      {/* Logo Section */}
+      <div className="p-8">
+        <div className="flex items-center space-x-3 group">
+          <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200 transition-transform group-hover:rotate-12">
+            <Logo className="w-8 h-8 invert brightness-0" />
+          </div>
           <div>
-            <h1 className="font-bold text-gray-900 leading-tight">2TI</h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{role}</p>
+            <h1 className="font-black text-xl text-gray-900 tracking-tighter leading-none">2TI</h1>
+            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 opacity-80">{role}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+        <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Menu Principal</p>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -122,16 +125,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileOpen(false)}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                 isActive
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-100'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="flex-1 text-sm font-medium">{item.label}</span>
+              <item.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : ''}`} />
+              <span className="flex-1 text-sm font-bold tracking-tight">{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Badge className={`rounded-full px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white text-blue-600' : 'bg-orange-500 text-white'}`}>
                   {item.badge}
                 </Badge>
               )}
@@ -140,26 +143,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         })}
       </nav>
 
-      {/* User Section */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center justify-between px-2 mb-3">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <Avatar>
-                <AvatarFallback className="bg-blue-600 text-white">
-                  {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            </div>
+      {/* Profile Section */}
+      <div className="p-6 m-4 bg-gray-50 rounded-3xl border border-gray-100">
+        <div className="flex items-center space-x-3 mb-6">
+          <Avatar className="w-12 h-12 ring-4 ring-white shadow-sm">
+            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black">
+              {user?.firstName?.[0] || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-gray-900 truncate">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-[10px] font-bold text-gray-400 truncate uppercase tracking-widest">{role}</p>
           </div>
         </div>
         <Button 
-          variant="outline" 
-          className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+          variant="ghost" 
+          className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl font-bold text-xs"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-2" />
