@@ -36,25 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  useEffect(() => {
-    // Initialize default admin if no users exist
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.length === 0) {
-      const defaultAdmin: User = {
-        id: 'admin-1',
-        role: 'admin',
-        email: 'admin@incubator.com',
-        firstName: 'Admin',
-        lastName: 'System',
-        approved: true,
-        username: 'admin'
-      };
-      localStorage.setItem('users', JSON.stringify([defaultAdmin]));
-      localStorage.setItem('passwords', JSON.stringify([
-        { userId: 'admin-1', password: 'admin' }
-      ]));
-    }
-  }, []);
+
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
@@ -113,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = React.useMemo(() => ({
     user,
     login,
-    loginWithGoogle,
     logout,
     register,
     isAuthenticated: !!user

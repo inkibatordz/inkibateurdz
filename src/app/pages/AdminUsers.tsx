@@ -321,7 +321,7 @@ const AdminUsers: React.FC = () => {
                   >
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-semibold">
-                        {user.firstName[0]}{user.lastName[0]}
+                        {user?.firstName?.[0] || '?'}{user?.lastName?.[0] || ''}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-1">

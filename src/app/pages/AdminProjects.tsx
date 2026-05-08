@@ -30,7 +30,9 @@ import {
 interface Project {
   id: string;
   studentId: string;
+  studentName?: string;
   mentorId?: string;
+  mentorName?: string;
   title: string;
   fileCtt?: string;
   status: 'pending' | 'accepted' | 'incubation' | 'rejected';
