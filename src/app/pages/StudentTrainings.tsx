@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { GraduationCap, Bell, Calendar, MapPin, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Formation {
   id: string;
@@ -18,6 +19,7 @@ interface Formation {
 }
 
 const StudentTrainings: React.FC = () => {
+  const { user } = useAuth();
   const [formations, setFormations] = useState<Formation[]>([]);
   const [registered, setRegistered] = useState<string[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
