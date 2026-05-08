@@ -11,9 +11,9 @@ import { toast } from 'sonner';
 
 interface Material {
   id: string;
-  name: string;
+  title: string;
   type: string;
-  availableCount: number;
+  size?: string;
 }
 
 interface Request {
@@ -178,8 +178,8 @@ const StudentMaterial: React.FC = () => {
                       {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-500">Stock: {item.availableCount > 0 ? <span className="text-green-600 font-medium">{item.availableCount}</span> : <span className="text-red-500">Rupture</span>}</p>
+                      <h4 className="font-medium text-gray-900">{item.title}</h4>
+                      <p className="text-sm text-gray-500">Détails: {item.size || 'Disponible'}</p>
                     </div>
                   </CardContent>
                 </Card>

@@ -11,9 +11,9 @@ import { toast } from 'sonner';
 
 interface Material {
   id: string;
-  name: string;
+  title: string;
   type: string;
-  availableCount: number;
+  size?: string;
 }
 
 interface Request {
@@ -33,9 +33,9 @@ const AdminMaterial: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     type: 'laptop',
-    availableCount: 1
+    size: '1'
   });
 
   useEffect(() => {
@@ -75,18 +75,18 @@ const AdminMaterial: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: formData.name,
+          title: formData.title,
           type: formData.type,
-          category: formData.type, // Category same as type for now
-          size: 'N/A',
-          availableCount: Number(formData.availableCount)
+          category: formData.type,
+          size: formData.size,
+          date: new Date().toLocaleDateString('fr-FR')
         }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Matériel ajouté');
         setIsDialogOpen(false);
-        setFormData({ name: '', type: 'laptop', availableCount: 1 });
+        setFormData({ title: '', type: 'laptop', size: '1' });
         loadData();
       }
     } catch (error) {
@@ -171,8 +171,8 @@ const AdminMaterial: React.FC = () => {
                 <div className="space-y-2">
                   <Label>Nom du matériel</Label>
                   <Input 
-                    value={formData.name} 
-                    onChange={e => setFormData({...formData, name: e.target.value})} 
+                    value={formData.title} 
+                    onChange={e => setFormData({...formData, title: e.target.value})} 
                     placeholder="Ex: Écran Dell 27''" required 
                   />
                 </div>
@@ -194,9 +194,9 @@ const AdminMaterial: React.FC = () => {
                   <div className="space-y-2">
                     <Label>Quantité en stock</Label>
                     <Input 
-                      type="number" min="0" 
-                      value={formData.availableCount} 
-                      onChange={e => setFormData({...formData, availableCount: parseInt(e.target.value)})} 
+                      value={formData.size} 
+                      onChange={e => setFormData({...formData, size: e.target.value})} 
+                      placeholder="Ex: 1 unité, XL, 16Go..."
                       required 
                     />
                   </div>
@@ -273,8 +273,8 @@ const AdminMaterial: React.FC = () => {
                       {item.type === 'laptop' ? <Monitor className="w-6 h-6" /> : item.type === 'server' ? <Server className="w-6 h-6" /> : <Package className="w-6 h-6"/>}
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-500">Stock: {item.availableCount}</p>
+                      <h4 className="font-medium text-gray-900">{item.title}</h4>
+                      <p className="text-sm text-gray-500">Détails: {item.size}</p>
                     </div>
                   </div>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
