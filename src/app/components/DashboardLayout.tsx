@@ -103,21 +103,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white/80 backdrop-blur-xl border-r border-gray-100">
       {/* Logo Section */}
-      <div className="p-8">
-        <div className="flex items-center space-x-3 group">
-          <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200 transition-transform group-hover:rotate-12">
+      <div className="p-8 pb-4">
+        <Link to="/" className="flex items-center space-x-3 group">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center transition-all duration-500 group-hover:rotate-[10deg] group-hover:scale-110">
             <Logo className="w-8 h-8 invert brightness-0" />
           </div>
           <div>
-            <h1 className="font-black text-xl text-gray-900 tracking-tighter leading-none">2TI</h1>
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1 opacity-80">{role}</p>
+            <h1 className="font-black text-2xl text-gray-900 tracking-tighter leading-none">2TI</h1>
+            <p className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] mt-1 opacity-80 leading-none">
+              Smart Incubator
+            </p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-        <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Menu Principal</p>
+      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-4 opacity-50">Menu</p>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -125,16 +127,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileOpen(false)}
-              className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
+              className={`flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-500 group relative ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-xl shadow-blue-100'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <item.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : ''}`} />
-              <span className="flex-1 text-sm font-bold tracking-tight">{item.label}</span>
+              <item.icon className={`w-5 h-5 transition-all duration-500 ${isActive ? 'text-white' : 'group-hover:text-blue-600'}`} />
+              <span className="flex-1 text-sm font-black tracking-tight">{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge className={`rounded-full px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white text-blue-600' : 'bg-orange-500 text-white'}`}>
+                <Badge className={`rounded-xl px-2 py-0.5 text-[10px] font-black ${isActive ? 'bg-white/20 text-white border-0' : 'bg-blue-50 text-blue-600'}`}>
                   {item.badge}
                 </Badge>
               )}
@@ -143,29 +145,31 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         })}
       </nav>
 
-      {/* Profile Section */}
-      <div className="p-6 m-4 bg-gray-50 rounded-3xl border border-gray-100">
-        <div className="flex items-center space-x-3 mb-6">
-          <Avatar className="w-12 h-12 ring-4 ring-white shadow-sm">
-            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black">
-              {user?.firstName?.[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-gray-900 truncate">
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className="text-[10px] font-bold text-gray-400 truncate uppercase tracking-widest">{role}</p>
+      {/* Profile Section - Enhanced */}
+      <div className="p-4 mt-auto">
+        <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
+          <div className="flex items-center space-x-3 mb-5 relative z-10">
+            <Avatar className="w-11 h-11 ring-4 ring-white shadow-lg">
+              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-base">
+                {user?.firstName?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-gray-900 truncate tracking-tight">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-[9px] font-black text-blue-600 truncate uppercase tracking-widest opacity-70 leading-none mt-0.5">{role}</p>
+            </div>
           </div>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-4"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Déconnexion
+          </Button>
         </div>
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl font-bold text-xs"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Déconnexion
-        </Button>
       </div>
     </div>
   );
@@ -178,36 +182,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Top Bar - Elegant Glassmorphism */}
+        <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-gray-100 flex items-center justify-between px-4 lg:px-10 sticky top-0 z-40">
           <div className="flex items-center space-x-4">
-            {/* Mobile Menu Trigger */}
+            {/* Mobile Menu Trigger - Styled */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="w-6 h-6" />
+                <Button variant="ghost" size="icon" className="lg:hidden w-11 h-11 rounded-2xl hover:bg-gray-100 transition-colors">
+                  <Menu className="w-6 h-6 text-gray-900" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-64 border-r-0">
+              <SheetContent side="left" className="p-0 w-72 border-r-0">
                 <SidebarContent />
               </SheetContent>
             </Sheet>
 
-            <div>
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-none">
-                {user?.firstName ? `Bienvenue, ${user.firstName} !` : 'Bienvenue !'}
+            <div className="min-w-0">
+              <h2 className="text-xl lg:text-2xl font-black text-gray-900 tracking-tighter truncate max-w-[180px] sm:max-w-none">
+                {user?.firstName ? `Hello, ${user.firstName} !` : 'Bienvenue !'}
               </h2>
-              <p className="hidden sm:block text-sm text-gray-500">
-              {new Date().toLocaleDateString('fr-FR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </p>
+              <p className="hidden sm:flex items-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-0.5">
+                <Calendar className="w-3 h-3 mr-2 text-blue-600" />
+                {new Date().toLocaleDateString('fr-FR', { 
+                  weekday: 'long', 
+                  day: 'numeric', 
+                  month: 'long'
+                })}
+              </p>
+            </div>
           </div>
-        </div>
 
         <div className="flex items-center space-x-4">
             {/* Notifications Dropdown */}
@@ -294,9 +298,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
-          <div className="max-w-7xl mx-auto min-h-full">
+        {/* Content Area - Premium Experience */}
+        <main className="flex-1 overflow-y-auto bg-[#fafafa] custom-scrollbar">
+          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-10 animate-in fade-in duration-700">
             {children || <Outlet />}
           </div>
         </main>

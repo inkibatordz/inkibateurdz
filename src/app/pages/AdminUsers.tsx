@@ -308,92 +308,92 @@ const AdminUsers: React.FC = () => {
         </Card>
 
         {/* Users List */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="border-b">
-            <CardTitle>Liste des utilisateurs</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {filteredUsers.length > 0 ? (
-              <div className="space-y-4">
-                {filteredUsers.map((user) => (
-                  <div 
-                    key={user.id}
-                    className="flex items-center justify-between p-5 rounded-lg border hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-semibold">
-                        {user?.firstName?.[0] || '?'}{user?.lastName?.[0] || ''}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-1">
-                          <h4 className="font-medium text-gray-900">
-                            {user.firstName} {user.lastName}
-                          </h4>
-                          <Badge className={getRoleBadgeColor(user.role)}>
-                            {getRoleLabel(user.role)}
-                          </Badge>
-                          {!user.approved && (
-                            <Badge className="bg-orange-100 text-orange-700">
-                              En attente
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-bold text-gray-900">Liste des utilisateurs</h2>
+            <Badge variant="secondary" className="font-bold">{filteredUsers.length}</Badge>
+          </div>
+          
+          {filteredUsers.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredUsers.map((user) => (
+                <Card 
+                  key={user.id}
+                  className="border-0 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
+                >
+                  <CardContent className="p-0">
+                    <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 min-w-0">
+                        <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-100 shrink-0">
+                          {user?.firstName?.[0] || '?'}{user?.lastName?.[0] || ''}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className="font-bold text-gray-900 truncate max-w-[150px]">
+                              {user.firstName} {user.lastName}
+                            </h4>
+                            <Badge className={`${getRoleBadgeColor(user.role)} border-0 text-[10px] font-black uppercase tracking-wider`}>
+                              {getRoleLabel(user.role)}
                             </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <span>{user.email}</span>
-                          {user.role === 'student' && user.university && (
-                            <>
-                              <span>•</span>
-                              <span>{user.university}</span>
-                            </>
-                          )}
-                          {user.department && (
-                            <>
-                              <span>•</span>
-                              <span>{user.department}</span>
-                            </>
-                          )}
+                            {!user.approved && (
+                              <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] font-black uppercase tracking-wider">
+                                En attente
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-gray-500 truncate font-medium">{user.email}</p>
+                            {(user.department || user.university) && (
+                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight truncate">
+                                {user.department || user.university}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {user.role === 'admin' || user.id === currentUser?.id ? (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-500">
-                          Système / Vous
-                        </Badge>
-                      ) : !user.approved ? (
-                        <>
+                      
+                      <div className="flex items-center gap-2 pt-4 sm:pt-0 border-t sm:border-0 border-gray-50">
+                        {user.role === 'admin' || user.id === currentUser?.id ? (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-400 border-gray-100 py-1.5 px-3 rounded-xl font-bold text-[10px] ml-auto">
+                            SYSTÈME / VOUS
+                          </Badge>
+                        ) : !user.approved ? (
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100 rounded-xl h-9 font-bold text-xs"
+                              onClick={() => handleApprove(user.id)}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              Approuver
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              className="flex-1 sm:flex-none shadow-lg shadow-red-100 rounded-xl h-9 font-bold text-xs"
+                              onClick={() => handleReject(user.id)}
+                            >
+                              <XCircle className="w-4 h-4 mr-1.5" />
+                              Rejeter
+                            </Button>
+                          </div>
+                        ) : (
                           <Button 
                             size="sm" 
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleApprove(user.id)}
+                            variant="outline"
+                            className="w-full sm:w-auto text-red-600 border-red-100 hover:bg-red-50 rounded-xl h-9 font-bold text-xs ml-auto"
+                            onClick={() => handleDeactivate(user.id)}
                           >
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
-                            Approuver
+                            <UserX className="w-4 h-4 mr-1.5" />
+                            Désactiver
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => handleReject(user.id)}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Rejeter
-                          </Button>
-                        </>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => handleDeactivate(user.id)}
-                        >
-                          <UserX className="w-4 h-4 mr-1" />
-                          Désactiver
-                        </Button>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
             ) : (
               <div className="text-center py-12">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />

@@ -57,139 +57,140 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Vue d'ensemble administrateur
-          </h1>
-          <p className="text-gray-600">
-            Gérez les utilisateurs, les projets et suivez les statistiques globales
-          </p>
-        </div>
-
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div onClick={() => navigate('/admin/users')} className="cursor-pointer transition-transform hover:scale-105">
-            <KPICard
-              title="Utilisateurs totaux"
-              value={stats.totalUsers}
-              icon={Users}
-              color="blue"
-              trend={{ value: '+12%', positive: true }}
-            />
+    <div className="space-y-10 animate-in">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tighter mb-2">
+              Tableau de Bord
+            </h1>
+            <p className="text-gray-500 font-medium text-sm">
+              Bienvenue sur votre espace de gestion premium.
+            </p>
           </div>
-          <div onClick={() => navigate('/admin/users?status=pending')} className="cursor-pointer transition-transform hover:scale-105">
-            <KPICard
-              title="Approbations en attente"
-              value={stats.pendingApprovals}
-              icon={Clock}
-              color="orange"
-            />
-          </div>
-          <div onClick={() => navigate('/admin/projects')} className="cursor-pointer transition-transform hover:scale-105">
-            <KPICard
-              title="Projets totaux"
-              value={stats.totalProjects}
-              icon={FolderKanban}
-              color="purple"
-              trend={{ value: '+8%', positive: true }}
-            />
-          </div>
-          <div onClick={() => navigate('/admin/projects?status=pending')} className="cursor-pointer transition-transform hover:scale-105">
-            <KPICard
-              title="Projets en attente"
-              value={stats.pendingProjects}
-              icon={CheckCircle2}
-              color="green"
-            />
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="rounded-xl border-gray-200 font-bold text-xs h-11 px-6 shadow-sm hover:bg-white hover:shadow-md transition-all">
+              <Clock className="w-4 h-4 mr-2 text-blue-600" />
+              Journal d'activité
+            </Button>
+            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 font-black text-xs h-11 px-6 shadow-xl shadow-blue-100 transition-all">
+              Générer Rapport
+            </Button>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card 
-            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-blue-300 group"
-            onClick={() => navigate('/admin/users')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <Badge className="bg-orange-500 text-white">{stats.pendingApprovals}</Badge>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Gérer les utilisateurs</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Approuvez ou rejetez les nouvelles inscriptions
-              </p>
-              <Button variant="ghost" size="sm" className="text-blue-600 p-0 h-auto group-hover:underline">
-                Voir les demandes <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-purple-300 group"
-            onClick={() => navigate('/admin/projects')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FolderKanban className="w-6 h-6 text-purple-600" />
-                </div>
-                <Badge className="bg-orange-500 text-white">{stats.pendingProjects}</Badge>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Gérer les projets</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Examinez et validez les projets soumis
-              </p>
-              <Button variant="ghost" size="sm" className="text-purple-600 p-0 h-auto group-hover:underline">
-                Voir les projets <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-300 group"
-            onClick={() => navigate('/admin/statistics')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Statistiques</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Consultez les rapports et analyses
-              </p>
-              <Button variant="ghost" size="sm" className="text-green-600 p-0 h-auto group-hover:underline">
-                Voir les stats <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* System Health Section */}
-        <div className="mt-8">
-          <Card className="border-0 shadow-sm bg-gradient-to-r from-gray-900 to-slate-800 text-white overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-            <CardContent className="p-8 relative z-10">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
-                    <Mail className="w-8 h-8 text-blue-400" />
+        {/* KPIs - Premium Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div onClick={() => navigate('/admin/users')} className="group cursor-pointer">
+            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 rounded-3xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                    <Users className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h3 className="text-xl font-black tracking-tight">Santé du Système Email</h3>
-                    <p className="text-gray-400 text-sm font-medium">Vérifiez si les notifications et codes OTP fonctionnent.</p>
+                  <Badge className="bg-green-50 text-green-600 border-0 font-black text-[10px]">+12%</Badge>
+                </div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Utilisateurs</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.totalUsers}</h3>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div onClick={() => navigate('/admin/users?status=pending')} className="group cursor-pointer">
+            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-orange-100 transition-all duration-500 rounded-3xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                    <Clock className="w-6 h-6" />
+                  </div>
+                  {stats.pendingApprovals > 0 && (
+                    <Badge className="bg-orange-600 text-white border-0 font-black text-[10px] animate-pulse">Action Requis</Badge>
+                  )}
+                </div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">En Attente</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.pendingApprovals}</h3>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div onClick={() => navigate('/admin/projects')} className="group cursor-pointer">
+            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500 rounded-3xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                    <FolderKanban className="w-6 h-6" />
+                  </div>
+                  <Badge className="bg-indigo-50 text-indigo-600 border-0 font-black text-[10px]">+5%</Badge>
+                </div>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Projets</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.totalProjects}</h3>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div onClick={() => navigate('/admin/projects?status=pending')} className="group cursor-pointer">
+            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-500 rounded-3xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                    <CheckCircle2 className="w-6 h-6" />
                   </div>
                 </div>
-                <div className="flex gap-4">
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nouveaux Projets</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.pendingProjects}</h3>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Quick Actions - Design Reimagined */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
+              <CardHeader className="p-8 pb-0">
+                <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                  Statistiques des Rôles
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100/50 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 -mr-4 -mt-4 w-20 h-20 bg-blue-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
+                    <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2 relative z-10">Étudiants Actifs</p>
+                    <h4 className="text-4xl font-black text-gray-900 tracking-tighter relative z-10">{stats.activeStudents}</h4>
+                    <p className="text-[10px] font-bold text-gray-400 mt-2 relative z-10">Sur un total de {stats.totalUsers} utilisateurs</p>
+                  </div>
+                  <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 -mr-4 -mt-4 w-20 h-20 bg-indigo-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
+                    <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2 relative z-10">Mentors Actifs</p>
+                    <h4 className="text-4xl font-black text-gray-900 tracking-tighter relative z-10">{stats.activeMentors}</h4>
+                    <p className="text-[10px] font-bold text-gray-400 mt-2 relative z-10">Accompagnement en cours</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Health Section - Glassmorphism */}
+            <Card className="border-0 shadow-xl rounded-[2.5rem] bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[80px]"></div>
+              <CardContent className="p-10 relative z-10">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-3xl border border-white/20 shadow-2xl">
+                      <Mail className="w-10 h-10 text-blue-300" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-2xl font-black tracking-tighter mb-2">Santé du Système</h3>
+                      <p className="text-blue-100/60 text-sm font-medium leading-relaxed max-w-xs">
+                        Vérifiez l'état des services de notification et d'authentification OTP.
+                      </p>
+                    </div>
+                  </div>
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl px-6"
+                    className="w-full md:w-auto bg-white text-blue-900 hover:bg-blue-50 font-black rounded-2xl h-14 px-10 shadow-2xl transition-all hover:scale-105 active:scale-95"
                     onClick={async () => {
-                      const email = prompt("Entrez un email pour tester l'envoi :");
+                      const email = prompt("Email de test :");
                       if (!email) return;
                       try {
                         const res = await fetch('/api/test-email', {
@@ -198,106 +199,61 @@ const AdminDashboard: React.FC = () => {
                           body: JSON.stringify({ email })
                         });
                         const data = await res.json();
-                        if (data.success) alert("✅ Succès ! L'email de test est parti.");
-                        else alert("❌ Échec : " + data.message + "\n\nGuide : " + (data.setup_guide || "Vérifiez Render."));
-                      } catch (e) {
-                        alert("❌ Erreur de connexion au serveur.");
-                      }
+                        if (data.success) alert("✅ Succès !");
+                        else alert("❌ Échec : " + data.message);
+                      } catch (e) { alert("❌ Erreur"); }
                     }}
                   >
-                    Tester l'envoi
+                    Lancer un Test
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle>Utilisateurs actifs</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
+          {/* Activity Feed - Elegant Sidebar style */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-lg font-black text-gray-900 tracking-tight">Flux d'Activité</h3>
+              <Badge variant="outline" className="rounded-full font-black text-[10px] text-blue-600 bg-blue-50 border-blue-100 uppercase tracking-widest">Temps Réel</Badge>
+            </div>
+            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="space-y-8">
+                  <div className="flex gap-4 group cursor-pointer">
+                    <div className="w-1.5 h-12 bg-blue-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
                     <div>
-                      <p className="font-medium text-gray-900">Étudiants</p>
-                      <p className="text-sm text-gray-600">Comptes actifs</p>
+                      <p className="text-sm text-gray-900 leading-tight">
+                        <span className="font-black">Nouveau projet</span> soumis par <span className="text-blue-600 font-bold">Marie Dubois</span>
+                      </p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Il y a 2 heures</p>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-blue-600">{stats.activeStudents}</p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
+                  <div className="flex gap-4 group cursor-pointer">
+                    <div className="w-1.5 h-12 bg-orange-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
                     <div>
-                      <p className="font-medium text-gray-900">Mentors</p>
-                      <p className="text-sm text-gray-600">Comptes actifs</p>
+                      <p className="text-sm text-gray-900 leading-tight">
+                        <span className="font-black">Inscription</span> de <span className="text-orange-600 font-bold">Thomas Martin</span> (Mentor)
+                      </p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Il y a 5 heures</p>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-purple-600">{stats.activeMentors}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle>Activité récente</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">Nouveau projet</span> soumis par Marie Dubois
-                    </p>
-                    <p className="text-xs text-gray-500">Il y a 2 heures</p>
+                  <div className="flex gap-4 group cursor-pointer">
+                    <div className="w-1.5 h-12 bg-indigo-500 rounded-full group-hover:scale-y-125 transition-transform origin-top" />
+                    <div>
+                      <p className="text-sm text-gray-900 leading-tight">
+                        <span className="font-black">Projet Validé</span> : Application IoT Smart Campus
+                      </p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Hier</p>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">Nouvelle inscription</span> - Thomas Martin (Mentor)
-                    </p>
-                    <p className="text-xs text-gray-500">Il y a 5 heures</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">Projet accepté</span> - Application IoT Smart Campus
-                    </p>
-                    <p className="text-xs text-gray-500">Hier</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">Nouvelle inscription</span> - Sophie Laurent (Étudiant)
-                    </p>
-                    <p className="text-xs text-gray-500">Il y a 2 jours</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                <Button variant="ghost" className="w-full mt-8 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 hover:text-blue-600 hover:bg-blue-50">
+                  Voir tout l'historique
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
   );
