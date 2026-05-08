@@ -103,10 +103,6 @@ const MentorProjects: React.FC = () => {
     }
   };
 
-  const getStudentName = (project: Project) => {
-    return (project as any).studentName || 'Inconnu';
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted': return <Badge className="bg-green-100 text-green-700">Accepté</Badge>;
@@ -136,7 +132,7 @@ const MentorProjects: React.FC = () => {
                       <div>
                         <CardTitle className="text-xl">{project.title}</CardTitle>
                         <p className="text-sm text-gray-600 mt-1">
-                          Étudiant : <strong>{getStudentName(project.studentId)}</strong>
+                          Étudiant : <strong>{(project as any).studentName || 'Inconnu'}</strong>
                         </p>
                       </div>
                     </div>
@@ -205,7 +201,7 @@ const MentorProjects: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
                  <div>
                     <h4 className="text-sm font-medium text-gray-500 uppercase">Étudiant</h4>
-                    <p className="font-medium text-gray-900">{getStudentName(selectedProject.studentId)}</p>
+                    <p className="font-medium text-gray-900">{(selectedProject as any).studentName || 'Inconnu'}</p>
                  </div>
                  <div>
                     <h4 className="text-sm font-medium text-gray-500 uppercase">Fichier CTT</h4>
