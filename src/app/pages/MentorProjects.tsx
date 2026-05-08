@@ -43,13 +43,15 @@ const MentorProjects: React.FC = () => {
     try {
       const res = await fetch(`/api/projects?mentorId=${user.id}`);
       const data = await res.json();
-      if (data.success) {
-        const mappedProjects = data.projects.map((p: any) => ({
-          ...p,
-          studentName: `${p.student_first_name} ${p.student_last_name}`,
-          mentorName: p.mentor_id ? `${p.mentor_first_name} ${p.mentor_last_name}` : 'Non assigné',
-          submittedDate: p.submitted_date
-        }));
+      if (data.success && Array.isArray(data.projects)) {
+        const mappedProjects = data.projects
+          .filter((p: any) => p && p.id)
+          .map((p: any) => ({
+            ...p,
+            studentName: p.student_first_name ? `${p.student_first_name} ${p.student_last_name || ''}` : 'Inconnu',
+            mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
+            submittedDate: p.submitted_date || new Date().toISOString()
+          }));
         setProjects(mappedProjects);
       }
     } catch (error) {
@@ -121,7 +123,7 @@ const MentorProjects: React.FC = () => {
 
         {projects.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
-            {projects.map((project) => (
+            {projects.filter(p => p).map((project) => (
               <Card key={project.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="border-b bg-gray-50/50">
                   <div className="flex items-start justify-between">

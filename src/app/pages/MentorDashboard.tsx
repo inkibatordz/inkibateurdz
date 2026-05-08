@@ -36,8 +36,16 @@ const MentorDashboard: React.FC = () => {
       try {
         const res = await fetch(`/api/projects?mentorId=${user.id}`);
         const data = await res.json();
-        if (data.success) {
-          setProjects(data.projects);
+        if (data.success && Array.isArray(data.projects)) {
+          const mappedProjects = data.projects
+            .filter((p: any) => p && p.id)
+            .map((p: any) => ({
+              ...p,
+              studentName: p.student_first_name ? `${p.student_first_name} ${p.student_last_name || ''}` : 'Inconnu',
+              mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
+              assignedDate: p.submitted_date || new Date().toISOString()
+            }));
+          setProjects(mappedProjects);
         }
       } catch (error) {
         console.error('Error fetching mentor projects:', error);
@@ -88,13 +96,13 @@ const MentorDashboard: React.FC = () => {
           />
           <KPICard
             title="En cours"
-            value={projects.filter(p => p.status === 'En cours').length}
+            value={projects.filter(p => p && p.status === 'En cours').length}
             icon={Clock}
             color="orange"
           />
           <KPICard
             title="Complétés"
-            value={projects.filter(p => p.status === 'Complété').length}
+            value={projects.filter(p => p && p.status === 'Complété').length}
             icon={CheckCircle2}
             color="green"
           />
@@ -118,7 +126,7 @@ const MentorDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {projects.map((project) => (
+              {projects.filter(p => p).map((project) => (
                 <div 
                   key={project.id}
                   className="flex items-center justify-between p-5 rounded-lg border hover:bg-gray-50 transition-colors"
