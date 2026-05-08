@@ -26,24 +26,42 @@ console.log('Email Configuration Check:');
 console.log('- EMAIL_USER:', process.env.EMAIL_USER ? 'DEFINED' : 'MISSING');
 console.log('- EMAIL_PASS:', process.env.EMAIL_PASS ? 'DEFINED' : 'MISSING');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
+let pool;
+try {
+  if (process.env.DATABASE_URL) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+    console.log('✅ PostgreSQL Pool created successfully');
+  } else {
+    console.warn('⚠️ DATABASE_URL is MISSING. Database features will fail.');
   }
-});
+} catch (err) {
+  console.error('❌ Failed to create PostgreSQL Pool:', err.message);
+}
+
+// Wrapper for pool.query to handle missing pool
+const safeQuery = async (text, params) => {
+  if (!pool) {
+    throw new Error('Database connection is not configured (DATABASE_URL is missing).');
+  }
+  return await pool.query(text, params);
+};
 
 // Initialize database tables
 const initDb = async () => {
   try {
-    await pool.query(`
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS otps (
         email TEXT PRIMARY KEY,
         otp TEXT NOT NULL,
         expires BIGINT NOT NULL
       );
     `);
-    await pool.query(`
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS news (
         id BIGINT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -53,7 +71,7 @@ const initDb = async () => {
         image_url TEXT
       );
     `);
-    await pool.query(`
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS trainings (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -66,7 +84,7 @@ const initDb = async () => {
         available_spots INTEGER NOT NULL
       );
     `);
-    await pool.query(`
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
@@ -84,7 +102,7 @@ const initDb = async () => {
     `);
 
     // Migrations for existing users table
-    await pool.query(`
+    await safeQuery(`
       DO $$ 
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='status') THEN
@@ -96,7 +114,7 @@ const initDb = async () => {
       END $$;
     `);
 
-    await pool.query(`
+    await safeQuery(`
       CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -110,7 +128,7 @@ const initDb = async () => {
     `);
 
     // Migrations for existing projects table
-    await pool.query(`
+    await safeQuery(`
       DO $$ 
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='projects' AND column_name='file_ctt') THEN
@@ -120,9 +138,9 @@ const initDb = async () => {
     `);
 
     // Add default admin if no users exist
-    const userCountResult = await pool.query('SELECT COUNT(*) FROM users');
+    const userCountResult = await safeQuery('SELECT COUNT(*) FROM users');
     if (parseInt(userCountResult.rows[0].count) === 0) {
-      await pool.query(
+      await safeQuery(
         'INSERT INTO users (id, email, password, role, first_name, last_name, approved) VALUES ($1, $2, $3, $4, $5, $6, $7)',
         ['admin', 'admin', 'admin', 'admin', 'Admin', 'System', true]
       );
@@ -131,7 +149,7 @@ const initDb = async () => {
 
     console.log('Database tables initialized');
   } catch (err) {
-    console.error('Error initializing database:', err);
+    console.error('Error initializing database:', err.message);
   }
 };
 
@@ -231,7 +249,7 @@ app.post('/api/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
   
   try {
-    const result = await pool.query('SELECT * FROM otps WHERE email = $1', [email]);
+    const result = await safeQuery('SELECT * FROM otps WHERE email = $1', [email]);
     const storedData = result.rows[0];
 
     if (!storedData) {
@@ -239,34 +257,34 @@ app.post('/api/verify-otp', async (req, res) => {
     }
 
     if (Date.now() > parseInt(storedData.expires)) {
-      await pool.query('DELETE FROM otps WHERE email = $1', [email]);
+      await safeQuery('DELETE FROM otps WHERE email = $1', [email]);
       return res.status(400).json({ success: false, message: 'Code expiré' });
     }
 
     if (storedData.otp === otp) {
-      await pool.query('DELETE FROM otps WHERE email = $1', [email]);
+      await safeQuery('DELETE FROM otps WHERE email = $1', [email]);
       res.json({ success: true, message: 'Code vérifié' });
     } else {
       res.status(400).json({ success: false, message: 'Code incorrect' });
     }
   } catch (err) {
-    console.error('Error verifying OTP:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error verifying OTP:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
 // --- News API ---
 app.get('/api/news', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM news ORDER BY id DESC');
+    const result = await safeQuery('SELECT * FROM news ORDER BY id DESC');
     const news = result.rows.map(item => ({
       ...item,
       imageUrl: item.image_url // map snake_case back to camelCase for frontend
     }));
     res.json({ success: true, news });
   } catch (err) {
-    console.error('Error fetching news:', err);
-    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des news' });
+    console.error('Error fetching news:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des news: ' + err.message });
   }
 });
 
@@ -278,7 +296,7 @@ app.post('/api/news', async (req, res) => {
     const id = Date.now();
     const newItem = { id, title, content, type, date: date || new Date().toISOString(), imageUrl };
     
-    await pool.query(
+    await safeQuery(
       'INSERT INTO news (id, title, content, type, date, image_url) VALUES ($1, $2, $3, $4, $5, $6)',
       [id, title, content, type, newItem.date, imageUrl]
     );
@@ -286,7 +304,7 @@ app.post('/api/news', async (req, res) => {
     console.log('News item saved successfully');
     res.json({ success: true, news: newItem });
   } catch (err) {
-    console.error('SERVER ERROR IN POST NEWS:', err);
+    console.error('SERVER ERROR IN POST NEWS:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -294,22 +312,22 @@ app.post('/api/news', async (req, res) => {
 app.delete('/api/news/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    const result = await pool.query('DELETE FROM news WHERE id = $1', [id]);
+    const result = await safeQuery('DELETE FROM news WHERE id = $1', [id]);
     if (result.rowCount > 0) {
       res.json({ success: true, message: 'Article supprimé' });
     } else {
       res.status(404).json({ success: false, message: 'Article non trouvé' });
     }
   } catch (err) {
-    console.error('Error deleting news:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error deleting news:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
 // --- Trainings API ---
 app.get('/api/trainings', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM trainings ORDER BY date ASC');
+    const result = await safeQuery('SELECT * FROM trainings ORDER BY date ASC');
     const trainings = result.rows.map(item => ({
       ...item,
       totalSpots: item.total_spots,
@@ -317,21 +335,21 @@ app.get('/api/trainings', async (req, res) => {
     }));
     res.json({ success: true, trainings });
   } catch (err) {
-    console.error('Error fetching trainings:', err);
-    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des formations' });
+    console.error('Error fetching trainings:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur lors de la récupération des formations: ' + err.message });
   }
 });
 
 app.post('/api/trainings', async (req, res) => {
   try {
     const { id, title, description, date, time, location, instructor, totalSpots } = req.body;
-    await pool.query(
+    await safeQuery(
       'INSERT INTO trainings (id, title, description, date, time, location, instructor, total_spots, available_spots) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [id, title, description, date, time, location, instructor, totalSpots, totalSpots]
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('Error adding training:', err);
+    console.error('Error adding training:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -339,11 +357,11 @@ app.post('/api/trainings', async (req, res) => {
 app.delete('/api/trainings/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    await pool.query('DELETE FROM trainings WHERE id = $1', [id]);
+    await safeQuery('DELETE FROM trainings WHERE id = $1', [id]);
     res.json({ success: true, message: 'Formation supprimée' });
   } catch (err) {
-    console.error('Error deleting training:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error deleting training:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
@@ -351,21 +369,21 @@ app.delete('/api/trainings/:id', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   const { id, email, password, role, firstName, lastName, department, level, studentId } = req.body;
   try {
-    await pool.query(
+    await safeQuery(
       'INSERT INTO users (id, email, password, role, first_name, last_name, department, level, student_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
       [id || Date.now().toString(), email, password, role || 'student', firstName, lastName, department, level, studentId]
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ success: false, message: 'L\'utilisateur existe peut-être déjà' });
+    console.error('Registration error:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur lors de l\'inscription: ' + err.message });
   }
 });
 
 // --- Users Management API (Admin only) ---
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
+    const result = await safeQuery('SELECT * FROM users ORDER BY created_at DESC');
     const users = result.rows.map(user => ({
       id: user.id,
       email: user.email,
@@ -380,30 +398,30 @@ app.get('/api/users', async (req, res) => {
     }));
     res.json({ success: true, users });
   } catch (err) {
-    console.error('Error fetching users:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error fetching users:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
 app.put('/api/users/:id/approve', async (req, res) => {
   const id = req.params.id;
   try {
-    await pool.query('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
+    await safeQuery('UPDATE users SET status = $1 WHERE id = $2', ['approved', id]);
     res.json({ success: true });
   } catch (err) {
-    console.error('Error approving user:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error approving user:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
 app.delete('/api/users/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    await safeQuery('DELETE FROM users WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {
-    console.error('Error deleting user:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error deleting user:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
@@ -421,10 +439,10 @@ app.post('/api/login', async (req, res) => {
     let result;
     if (isGoogle) {
       // Google Login: Only check email
-      result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      result = await safeQuery('SELECT * FROM users WHERE email = $1', [email]);
     } else {
       // Normal Login: Check email and password
-      result = await pool.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
+      result = await safeQuery('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
     }
 
     if (result.rows.length > 0) {
@@ -446,8 +464,8 @@ app.post('/api/login', async (req, res) => {
       res.status(401).json({ success: false, message: isGoogle ? 'Compte non trouvé. Veuillez vous inscrire d\'abord.' : 'Identifiants incorrects' });
     }
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Login error:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
@@ -455,7 +473,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/projects', async (req, res) => {
   const { studentId, mentorId } = req.query;
   try {
-    let query = `
+    let queryText = `
       SELECT p.*, 
              u.first_name as student_first_name, u.last_name as student_last_name,
              m.first_name as mentor_first_name, m.last_name as mentor_last_name
@@ -466,14 +484,14 @@ app.get('/api/projects', async (req, res) => {
     let params = [];
     
     if (studentId) {
-      query += ' WHERE p.student_id = $1';
+      queryText += ' WHERE p.student_id = $1';
       params.push(studentId);
     } else if (mentorId) {
-      query += ' WHERE p.mentor_id = $1';
+      queryText += ' WHERE p.mentor_id = $1';
       params.push(mentorId);
     }
     
-    const result = await pool.query(query, params);
+    const result = await safeQuery(queryText, params);
     const projects = result.rows.map(p => ({
       id: p.id,
       title: p.title,
@@ -488,21 +506,21 @@ app.get('/api/projects', async (req, res) => {
     }));
     res.json({ success: true, projects });
   } catch (err) {
-    console.error('Error fetching projects:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error fetching projects:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
 app.post('/api/projects', async (req, res) => {
   const { id, title, description, studentId } = req.body;
   try {
-    await pool.query(
+    await safeQuery(
       'INSERT INTO projects (id, title, description, student_id, submitted_date, status) VALUES ($1, $2, $3, $4, $5, $6)',
       [id || `proj-${Date.now()}`, title, description, studentId, new Date().toISOString(), 'pending']
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('Error adding project:', err);
+    console.error('Error adding project:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -511,11 +529,11 @@ app.put('/api/projects/:id/status', async (req, res) => {
   const id = req.params.id;
   const { status } = req.body;
   try {
-    await pool.query('UPDATE projects SET status = $1 WHERE id = $2', [status, id]);
+    await safeQuery('UPDATE projects SET status = $1 WHERE id = $2', [status, id]);
     res.json({ success: true });
   } catch (err) {
-    console.error('Error updating project status:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error updating project status:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
@@ -523,11 +541,11 @@ app.put('/api/projects/:id/assign-mentor', async (req, res) => {
   const id = req.params.id;
   const { mentorId } = req.body;
   try {
-    await pool.query('UPDATE projects SET mentor_id = $1, status = $2 WHERE id = $3', [mentorId, 'accepted', id]);
+    await safeQuery('UPDATE projects SET mentor_id = $1, status = $2 WHERE id = $3', [mentorId, 'accepted', id]);
     res.json({ success: true });
   } catch (err) {
-    console.error('Error assigning mentor:', err);
-    res.status(500).json({ success: false, message: 'Erreur serveur' });
+    console.error('Error assigning mentor:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });
 
