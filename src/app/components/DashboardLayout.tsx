@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
