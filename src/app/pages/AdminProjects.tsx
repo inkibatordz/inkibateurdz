@@ -141,7 +141,6 @@ const AdminProjects: React.FC = () => {
     } catch (error) {
       toast.error('Erreur lors de l\'assignation du mentor');
     }
-    }
   };
   
   const handleDeleteProject = async (id: string) => {

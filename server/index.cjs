@@ -385,7 +385,7 @@ app.get('/api/trainings/:id/participants', async (req, res) => {
   const { id } = req.params;
   try {
     const result = await safeQuery(`
-      SELECT u.first_name, u.last_name, u.email, u.department, u.level
+      SELECT u.id, u.first_name, u.last_name, u.email, u.department, u.level, u.label
       FROM training_registrations tr
       JOIN users u ON tr.student_id = u.id
       WHERE tr.training_id = $1
@@ -393,11 +393,13 @@ app.get('/api/trainings/:id/participants', async (req, res) => {
     `, [id]);
     
     const participants = result.rows.map(row => ({
+      id: row.id,
       firstName: row.first_name,
       lastName: row.last_name,
       email: row.email,
       department: row.department,
-      level: row.level
+      level: row.level,
+      label: row.label
     }));
     
     res.json({ success: true, participants });
@@ -941,6 +943,28 @@ app.get('/api/trainings/my-registrations', async (req, res) => {
     const result = await safeQuery('SELECT training_id FROM training_registrations WHERE student_id = $1', [studentId]);
     res.json({ success: true, registrations: result.rows.map(r => r.training_id) });
   } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/trainings/:id/participants/:studentId', async (req, res) => {
+  const { id, studentId } = req.params;
+  try {
+    await safeQuery('BEGIN');
+    const result = await safeQuery(
+      'DELETE FROM training_registrations WHERE training_id = $1 AND student_id = $2',
+      [id, studentId]
+    );
+    
+    if (result.rowCount > 0) {
+      await safeQuery('UPDATE trainings SET available_spots = available_spots + 1 WHERE id = $1', [id]);
+    }
+    
+    await safeQuery('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await safeQuery('ROLLBACK');
+    console.error('Error removing participant:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
