@@ -192,17 +192,6 @@ const LandingPage: React.FC = () => {
                   className="w-full h-auto object-cover aspect-[4/3]"
                 />
               </div>
-              <div className="absolute -top-10 -right-10 bg-white p-6 rounded-3xl shadow-2xl z-20 hidden md:block animate-bounce-slow">
-                <div className="flex items-center gap-4">
-                  <div className="bg-green-100 p-2 rounded-xl text-green-600">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Approuvé par</p>
-                    <p className="text-sm font-black text-gray-900">Ministère Supérieur</p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>

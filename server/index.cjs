@@ -7,7 +7,8 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../dist')));
@@ -127,6 +128,9 @@ const initDb = async () => {
       BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='projects' AND column_name='file_ctt') THEN
           ALTER TABLE projects ADD COLUMN file_ctt TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='projects' AND column_name='file_data') THEN
+          ALTER TABLE projects ADD COLUMN file_data TEXT;
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='projects' AND column_name='progress') THEN
           ALTER TABLE projects ADD COLUMN progress INTEGER DEFAULT 0;
@@ -643,6 +647,77 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+app.post('/api/reset-password', async (req, res) => {
+  const { email, firstName, lastName, studentId, newPassword } = req.body;
+  try {
+    const result = await safeQuery(
+      'SELECT id, first_name FROM users WHERE email = $1 AND first_name = $2 AND last_name = $3 AND student_id = $4',
+      [email, firstName, lastName, studentId]
+    );
+
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      await safeQuery('UPDATE users SET password = $1 WHERE id = $2', [newPassword, user.id]);
+      
+      // Send Email Notification
+      try {
+        await transporter.sendMail({
+          from: `"Inkibator Support" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: 'Réinitialisation de votre mot de passe - Inkibator',
+          html: `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display: inline-block; padding: 12px; background-color: #2563eb; border-radius: 12px;">
+                   <span style="font-size: 24px; color: white;">🎓</span>
+                </div>
+                <h2 style="color: #1e293b; margin-top: 15px;">Réinitialisation Réussie</h2>
+              </div>
+              
+              <p>Bonjour <strong>${user.first_name}</strong>,</p>
+              <p>Nous vous confirmons que le mot de passe de votre compte <strong>Inkibator</strong> a été modifié avec succès suite à votre demande de vérification d'identité.</p>
+              
+              <div style="margin: 25px 0; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 10px 0; color: #64748b; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Vos nouveaux identifiants :</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <p style="margin: 0;"><strong>📧 Email :</strong> ${email}</p>
+                  <p style="margin: 0;"><strong>🔑 Mot de passe :</strong> <span style="color: #2563eb; font-family: monospace; font-size: 110%;">${newPassword}</span></p>
+                </div>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.APP_URL || 'http://localhost:5173'}/login" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; transition: background-color 0.2s;">
+                  Se connecter à la plateforme
+                </a>
+              </div>
+              
+              <p style="font-size: 14px; color: #64748b;">
+                <strong>Note de sécurité :</strong> Si vous n'êtes pas à l'origine de cette demande, veuillez contacter immédiatement l'administration.
+              </p>
+              
+              <hr style="margin: 30px 0; border: 0; border-top: 1px solid #f1f5f9;" />
+              <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
+                Ceci est un message automatique, merci de ne pas y répondre.<br/>
+                &copy; 2024 Inkibator Platform. Tous droits réservés.
+              </p>
+            </div>
+          `
+        });
+        console.log(`Email de réinitialisation envoyé avec succès à ${email}`);
+      } catch (mailError) {
+        console.error('Erreur lors de l\'envoi de l\'email de reset:', mailError.message);
+      }
+
+      res.json({ success: true, message: 'Mot de passe mis à jour avec succès' });
+    } else {
+      res.status(404).json({ success: false, message: 'Les informations fournies ne correspondent à aucun compte' });
+    }
+  } catch (err) {
+    console.error('Password reset error:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
 // --- Notifications API ---
 app.get('/api/notifications', async (req, res) => {
   const { userId } = req.query;
@@ -701,14 +776,14 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.post('/api/projects', async (req, res) => {
-  const { title, description, studentId, fileCtt } = req.body;
+  const { title, description, studentId, fileCtt, fileData } = req.body;
   const id = 'proj-' + Date.now();
   const submittedDate = new Date().toISOString();
   
   try {
     await safeQuery(
-      'INSERT INTO projects (id, title, description, student_id, status, submitted_date, file_ctt, progress) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [id, title, description || 'Nouveau projet', studentId, 'pending', submittedDate, fileCtt || null, 0]
+      'INSERT INTO projects (id, title, description, student_id, status, submitted_date, file_ctt, file_data, progress) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)',
+      [id, title, description || 'Nouveau projet', studentId, 'pending', submittedDate, fileCtt || null, fileData || null]
     );
 
     // Notify Admin
@@ -729,6 +804,21 @@ app.put('/api/projects/:id/status', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error updating project status:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+app.get('/api/projects/:id/file', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await safeQuery('SELECT file_ctt, file_data FROM projects WHERE id = $1', [id]);
+    if (result.rows.length > 0 && result.rows[0].file_data) {
+      res.json({ success: true, fileCtt: result.rows[0].file_ctt, fileData: result.rows[0].file_data });
+    } else {
+      res.status(404).json({ success: false, message: 'Fichier non trouvé' });
+    }
+  } catch (err) {
+    console.error('Error fetching project file:', err.message);
     res.status(500).json({ success: false, message: 'Erreur serveur: ' + err.message });
   }
 });

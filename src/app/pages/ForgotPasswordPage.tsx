@@ -8,7 +8,13 @@ import { GraduationCap, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
 
 const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    studentId: '',
+    newPassword: ''
+  });
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,18 +24,27 @@ const ForgotPasswordPage: React.FC = () => {
     setError('');
     setLoading(true);
 
-    // Simulate password reset
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const userExists = users.some((u: any) => u.email === email);
+    try {
+      const res = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (userExists) {
+      const data = await res.json();
+
+      if (data.success) {
         setSuccess(true);
       } else {
-        setError('Aucun compte trouvé avec cet email');
+        setError(data.message || 'Les informations fournies ne correspondent à aucun compte');
       }
+    } catch (err) {
+      setError('Erreur de connexion au serveur');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -53,7 +68,7 @@ const ForgotPasswordPage: React.FC = () => {
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl">Réinitialisation</CardTitle>
             <CardDescription>
-              Entrez votre email pour recevoir un lien de réinitialisation
+              Entrez vos informations exactes pour réinitialiser le mot de passe
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -72,19 +87,70 @@ const ForgotPasswordPage: React.FC = () => {
                     id="email"
                     type="email"
                     placeholder="email@exemple.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Prénom</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="Votre prénom"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Nom</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Votre nom"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="studentId">Matricule / Numéro d'inscription</Label>
+                  <Input
+                    id="studentId"
+                    placeholder="Ex: 2024..."
+                    value={formData.studentId}
+                    onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                    required
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Entrez le nouveau mot de passe"
+                    value={formData.newPassword}
+                    onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                    required
+                    minLength={6}
                     className="h-11"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full h-11 bg-blue-600 hover:bg-blue-700" 
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 mt-2" 
                   disabled={loading}
                 >
-                  {loading ? 'Envoi...' : 'Envoyer le lien'}
+                  {loading ? 'Vérification...' : 'Réinitialiser le mot de passe'}
                 </Button>
 
                 <div className="text-center mt-4">
@@ -99,15 +165,14 @@ const ForgotPasswordPage: React.FC = () => {
                   <CheckCircle2 className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Email envoyé !
+                  Succès !
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Un lien de réinitialisation a été envoyé à {email}. 
-                  Vérifiez votre boîte de réception.
+                  Votre mot de passe a été réinitialisé avec succès. Un email de confirmation contenant vos identifiants vous a été envoyé. Vous pouvez maintenant vous connecter.
                 </p>
                 <Link to="/login">
                   <Button className="w-full h-11 bg-blue-600 hover:bg-blue-700">
-                    Retour à la connexion
+                    Aller à la connexion
                   </Button>
                 </Link>
               </div>

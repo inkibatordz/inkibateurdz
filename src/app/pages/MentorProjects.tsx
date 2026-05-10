@@ -113,6 +113,25 @@ const MentorProjects: React.FC = () => {
     }
   };
 
+  const handleDownloadFile = async (projectId: string, fileName: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/file`);
+      const data = await res.json();
+      if (data.success && data.fileData) {
+        const link = document.createElement('a');
+        link.href = data.fileData;
+        link.download = data.fileCtt || fileName || 'document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        toast.error('Fichier non trouvé');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
   return (
     <div>
       <div className="space-y-6">
@@ -210,6 +229,17 @@ const MentorProjects: React.FC = () => {
                     <div className="flex items-center space-x-2 mt-1">
                       <FileText className="w-4 h-4 text-blue-600" />
                       <span className="text-sm text-gray-900">{selectedProject.fileCtt || 'Non fourni'}</span>
+                      {selectedProject.fileCtt && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-blue-600 ml-2"
+                          onClick={() => handleDownloadFile(selectedProject.id, selectedProject.fileCtt!)}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Télécharger
+                        </Button>
+                      )}
                     </div>
                  </div>
               </div>

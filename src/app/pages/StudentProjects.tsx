@@ -31,7 +31,8 @@ const StudentProjects: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    fileCtt: ''
+    fileCtt: '',
+    fileData: ''
   });
 
   useEffect(() => {
@@ -66,6 +67,8 @@ const StudentProjects: React.FC = () => {
       title: formData.title,
       studentId: user?.id,
       description: 'Nouveau projet soumis via la plateforme', // Default description
+      fileCtt: formData.fileCtt,
+      fileData: formData.fileData
     };
 
     try {
@@ -78,7 +81,7 @@ const StudentProjects: React.FC = () => {
       if (data.success) {
         toast.success('Projet soumis avec succès !');
         setIsDialogOpen(false);
-        setFormData({ title: '', fileCtt: '' });
+        setFormData({ title: '', fileCtt: '', fileData: '' });
         loadProjects();
       } else {
         toast.error(data.message || 'Erreur lors de la soumission');
@@ -105,6 +108,46 @@ const StudentProjects: React.FC = () => {
       case 'incubation': return 'En incubation';
       case 'rejected': return 'Rejeté';
       default: return status;
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (limit to 5MB for example)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Le fichier est trop volumineux (max 5MB)');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({
+          ...formData,
+          fileCtt: file.name,
+          fileData: reader.result as string
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDownloadFile = async (projectId: string, fileName: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/file`);
+      const data = await res.json();
+      if (data.success && data.fileData) {
+        const link = document.createElement('a');
+        link.href = data.fileData;
+        link.download = data.fileCtt || fileName || 'document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        toast.error('Fichier non trouvé');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement');
     }
   };
 
@@ -146,7 +189,7 @@ const StudentProjects: React.FC = () => {
                       id="fileCtt"
                       type="file"
                       accept=".pdf,.doc,.docx"
-                      onChange={(e) => setFormData({ ...formData, fileCtt: e.target.files?.[0]?.name || '' })}
+                      onChange={handleFileChange}
                       className="cursor-pointer"
                       required
                     />
@@ -254,7 +297,12 @@ const StudentProjects: React.FC = () => {
                           </DialogContent>
                         </Dialog>
                         {project.fileCtt && (
-                          <Button variant="ghost" size="sm" className="text-blue-600">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-blue-600"
+                            onClick={() => handleDownloadFile(project.id, project.fileCtt || 'document.pdf')}
+                          >
                             Télécharger CTT
                           </Button>
                         )}

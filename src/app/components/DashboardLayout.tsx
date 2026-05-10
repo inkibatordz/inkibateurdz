@@ -47,6 +47,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (user) {
+      const fetchNotifications = async () => {
+        try {
+          const userId = role === 'admin' ? 'admin' : user.id;
+          const res = await fetch(`/api/notifications?userId=${userId}`);
+          const data = await res.json();
+          if (data.success && data.notifications) {
+            setNotifications(data.notifications.slice(0, 3)); // Store top 3 for dropdown
+            setUnreadCount(data.notifications.filter((n: any) => !n.is_read).length);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchNotifications();
+    }
+  }, [user, role]);
 
   const getNavItems = () => {
     if (role === 'student') {
@@ -56,7 +77,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         { icon: Users, label: 'Mentorat', path: '/student/mentorship' },
         { icon: GraduationCap, label: 'Formations', path: '/student/trainings' },
         { icon: Package, label: 'Matériel', path: '/student/material' },
-        { icon: Bell, label: 'Notifications', path: '/student/notifications', badge: 3 },
+        { icon: Bell, label: 'Notifications', path: '/student/notifications', badge: unreadCount },
         { icon: User, label: 'Profil', path: '/student/profile' },
       ];
     } else if (role === 'mentor') {
@@ -64,7 +85,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         { icon: LayoutDashboard, label: 'Dashboard', path: '/mentor' },
         { icon: FolderKanban, label: 'Projets assignés', path: '/mentor/projects' },
         { icon: Users, label: 'Mentorat', path: '/mentor/mentorship' },
-        { icon: Bell, label: 'Notifications', path: '/mentor/notifications', badge: 2 },
+        { icon: Bell, label: 'Notifications', path: '/mentor/notifications', badge: unreadCount },
         { icon: User, label: 'Profil', path: '/mentor/profile' },
       ];
     } else {
@@ -76,7 +97,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         { icon: Package, label: 'Matériel', path: '/admin/material' },
         { icon: BarChart3, label: 'Statistiques', path: '/admin/statistics' },
         { icon: Newspaper, label: 'Actualités', path: '/admin/news' },
-        { icon: Bell, label: 'Notifications', path: '/admin/notifications', badge: 5 },
+        { icon: Bell, label: 'Notifications', path: '/admin/notifications', badge: unreadCount },
       ];
     }
   };
@@ -88,10 +109,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
     return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
   };
 
-  const getNotificationCount = () => {
-    const item = navItems.find(item => item.label === 'Notifications');
-    return item?.badge || 0;
-  };
+  const getNotificationCount = () => unreadCount;
 
   const handleLogout = () => {
     logout();
@@ -235,27 +253,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="max-h-80 overflow-y-auto">
-                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b bg-blue-50/50">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-gray-900">Bienvenue sur l'Incubateur !</p>
-                      <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
+                  {notifications.length > 0 ? notifications.map(notif => (
+                    <div key={notif.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b ${!notif.is_read ? 'bg-blue-50/50' : ''}`}>
+                      <div className="flex items-start justify-between">
+                        <p className="text-sm font-medium text-gray-900">{notif.title}</p>
+                        {!notif.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Complétez votre profil pour commencer.</p>
-                    <p className="text-xs text-blue-600 mt-2 font-medium">À l'instant</p>
-                  </div>
-                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b bg-blue-50/50">
-                    <div className="flex items-start justify-between">
-                      <p className="text-sm font-medium text-gray-900">Nouveau document</p>
-                      <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
+                  )) : (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-gray-500">Aucune notification récente</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Un nouveau modèle de cahier des charges est disponible.</p>
-                    <p className="text-xs text-blue-600 mt-2 font-medium">Il y a 2 heures</p>
-                  </div>
-                  <div className="p-3 hover:bg-gray-50 cursor-pointer border-b">
-                    <p className="text-sm font-medium text-gray-900">Rappel de formation</p>
-                    <p className="text-xs text-gray-500 mt-1">N'oubliez pas la session de Business Model Canvas demain.</p>
-                    <p className="text-xs text-gray-400 mt-2">Hier</p>
-                  </div>
+                  )}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 

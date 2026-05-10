@@ -179,6 +179,25 @@ const AdminProjects: React.FC = () => {
     }
   };
 
+  const handleDownloadFile = async (projectId: string, fileName: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/file`);
+      const data = await res.json();
+      if (data.success && data.fileData) {
+        const link = document.createElement('a');
+        link.href = data.fileData;
+        link.download = data.fileCtt || fileName || 'document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        toast.error('Fichier non trouvé');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
   const pendingCount = projects.filter(p => p.status === 'pending').length;
   const acceptedCount = projects.filter(p => p.status === 'accepted').length;
   const incubationCount = projects.filter(p => p.status === 'incubation').length;
@@ -407,7 +426,11 @@ const AdminProjects: React.FC = () => {
                         <p className="text-sm text-gray-600">{selectedProject.fileCtt}</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDownloadFile(selectedProject.id, selectedProject.fileCtt!)}
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Télécharger
                     </Button>
