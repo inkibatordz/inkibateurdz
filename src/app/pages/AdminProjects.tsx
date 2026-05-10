@@ -345,8 +345,20 @@ const AdminProjects: React.FC = () => {
                           }}
                         >
                           <FileText className="w-4 h-4 mr-2" />
-                          Voir détails ({project.fileCtt || 'Cahier'})
+                          Voir détails
                         </Button>
+
+                        {project.fileCtt && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => handleDownloadFile(project.id, project.fileCtt!)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Télécharger (PDF)
+                          </Button>
+                        )}
 
                         <Button 
                           variant="ghost" 

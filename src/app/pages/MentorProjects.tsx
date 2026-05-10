@@ -178,6 +178,16 @@ const MentorProjects: React.FC = () => {
                             <ChatRoom projectId={project.id} projectName={project.title} />
                           </DialogContent>
                         </Dialog>
+                        {project.fileCtt && (
+                          <Button 
+                            variant="outline" 
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => handleDownloadFile(project.id, project.fileCtt!)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Télécharger PDF
+                          </Button>
+                        )}
                         <Button 
                           variant="outline"
                           onClick={() => {

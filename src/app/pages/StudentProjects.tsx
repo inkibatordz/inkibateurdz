@@ -8,7 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Progress } from '../components/ui/progress';
-import { FolderKanban, Plus, Upload, FileText, Calendar as CalendarIcon, MessageCircle, MessageSquare } from 'lucide-react';
+import { FolderKanban, Plus, Upload, FileText, Download, Calendar as CalendarIcon, MessageCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import ChatRoom from '../components/ChatRoom';
@@ -298,12 +298,13 @@ const StudentProjects: React.FC = () => {
                         </Dialog>
                         {project.fileCtt && (
                           <Button 
-                            variant="ghost" 
+                            variant="outline" 
                             size="sm" 
-                            className="text-blue-600"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             onClick={() => handleDownloadFile(project.id, project.fileCtt || 'document.pdf')}
                           >
-                            Télécharger CTT
+                            <Download className="w-4 h-4 mr-2" />
+                            Télécharger PDF
                           </Button>
                         )}
                       </div>
