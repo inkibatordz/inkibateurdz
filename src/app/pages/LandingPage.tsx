@@ -197,15 +197,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Trust Marks - Smooth Gradients */}
-      <section className="py-12 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center items-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-          {['Microsoft', 'Google Cloud', 'Cisco', 'Algeria Venture', 'USTHB'].map(name => (
-            <span key={name} className="text-2xl font-black tracking-tighter text-gray-400">{name}</span>
-          ))}
-        </div>
-      </section>
-
       {/* Features Grid */}
       <section id="services" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">

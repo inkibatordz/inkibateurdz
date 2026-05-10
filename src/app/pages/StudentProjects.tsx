@@ -298,13 +298,13 @@ const StudentProjects: React.FC = () => {
                         </Dialog>
                         {project.fileCtt && (
                           <Button 
-                            variant="outline" 
+                            variant="secondary" 
                             size="sm" 
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                             onClick={() => handleDownloadFile(project.id, project.fileCtt || 'document.pdf')}
                           >
                             <Download className="w-4 h-4 mr-2" />
-                            Télécharger PDF
+                            Télécharger mon PDF
                           </Button>
                         )}
                       </div>
