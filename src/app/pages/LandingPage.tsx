@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { Button } from '../components/ui/button';
@@ -23,7 +23,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import {
   Sheet,
   SheetContent,
