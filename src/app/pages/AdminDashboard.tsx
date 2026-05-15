@@ -22,6 +22,7 @@ const AdminDashboard: React.FC = () => {
     pendingApprovals: 0,
     totalProjects: 0,
     pendingProjects: 0,
+    incubationProjects: 0,
     activeStudents: 0,
     activeMentors: 0
   });
@@ -48,6 +49,7 @@ const AdminDashboard: React.FC = () => {
             pendingApprovals: allUsers.filter((u: any) => u.status === 'pending').length,
             totalProjects: allProjects.length,
             pendingProjects: allProjects.filter((p: any) => p.status === 'pending').length,
+            incubationProjects: allProjects.filter((p: any) => p.status === 'incubation').length,
             activeStudents: allUsers.filter((u: any) => u.role === 'student' && u.status === 'approved').length,
             activeMentors: allUsers.filter((u: any) => u.role === 'mentor' && u.status === 'approved').length
           });
@@ -162,16 +164,16 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </div>
 
-          <div onClick={() => navigate('/admin/projects?status=pending')} className="group cursor-pointer">
-            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-500 rounded-3xl overflow-hidden group">
+          <div onClick={() => navigate('/admin/projects?status=incubation')} className="group cursor-pointer">
+            <Card className="border-0 shadow-sm hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 rounded-3xl overflow-hidden group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
-                    <CheckCircle2 className="w-6 h-6" />
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm">
+                    <FolderKanban className="w-6 h-6" />
                   </div>
                 </div>
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nouveaux Projets</p>
-                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.pendingProjects}</h3>
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">En incubation</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.incubationProjects}</h3>
               </CardContent>
             </Card>
           </div>
