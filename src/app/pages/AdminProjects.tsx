@@ -84,7 +84,8 @@ const AdminProjects: React.FC = () => {
             studentName: p.student_first_name ? `${p.student_first_name} ${p.student_last_name || ''}` : 'Inconnu',
             studentLabel: p.student_label || null,
             mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
-            submittedDate: p.submitted_date || new Date().toISOString()
+            submittedDate: p.submitted_date || new Date().toISOString(),
+            fileCtt: p.file_ctt || p.fileCtt
           }));
         setProjects(mappedProjects);
       }
