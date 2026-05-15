@@ -257,15 +257,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
         <div className="flex items-center space-x-4">
             {/* Notifications Dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative hover:bg-blue-50 rounded-full transition-colors">
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
+              <DropdownMenuTrigger className="relative w-10 h-10 flex items-center justify-center hover:bg-blue-50 rounded-full transition-all duration-300 group outline-none">
+                <Bell className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-4 ring-white shadow-lg pointer-events-none px-1">
+                    {unreadCount}
+                  </span>
+                )}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[400px] rounded-3xl shadow-2xl border-gray-100 p-2">
                 <DropdownMenuLabel className="flex items-center justify-between p-4">
