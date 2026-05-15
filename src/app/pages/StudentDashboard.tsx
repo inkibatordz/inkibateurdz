@@ -59,22 +59,30 @@ const StudentDashboard: React.FC = () => {
         // Fetch student projects
         const projRes = await fetch(`/api/projects?studentId=${user.id}`);
         const projData = await projRes.json();
-        if (projData.success) setProjects(projData.projects);
+        if (projData.success) {
+          const allProjects = projData.projects;
+          setProjects(allProjects);
+          
+          // Find the first project with an assigned mentor
+          const projectWithMentor = allProjects.find((p: any) => p.mentor_id);
+          if (projectWithMentor) {
+            setUpcomingSession({
+              id: projectWithMentor.id,
+              mentorName: `${projectWithMentor.mentor_first_name} ${projectWithMentor.mentor_last_name}`,
+              date: new Date().toISOString(), // Fallback date
+              time: '14:00',
+              location: 'Bureau de Mentorat',
+              topic: `Suivi du projet: ${projectWithMentor.title}`
+            });
+          } else {
+            setUpcomingSession(null);
+          }
+        }
 
         // Fetch trainings
         const trainRes = await fetch(`/api/trainings`);
         const trainData = await trainRes.json();
         if (trainData.success) setTrainings(trainData.trainings);
-
-        // Mock upcoming mentorship session (staying as is for now)
-        setUpcomingSession({
-          id: '1',
-          mentorName: 'Dr. Sarah Martin',
-          date: '2026-02-25',
-          time: '14:00',
-          location: 'Salle Innovation A',
-          topic: 'Validation du Business Model'
-        });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       }
@@ -231,17 +239,17 @@ const StudentDashboard: React.FC = () => {
                 {upcomingSession ? (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback className="bg-blue-600 text-white">
-                          SM
+                      <Avatar className="w-12 h-12 shadow-inner ring-2 ring-blue-100">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white font-bold">
+                          {upcomingSession.mentorName.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium text-gray-900">
-                          {upcomingSession.mentorName}
-                        </h4>
-                        <p className="text-sm text-gray-500">Mentor principal</p>
-                      </div>
+                          <h4 className="font-bold text-gray-900">
+                            {upcomingSession.mentorName}
+                          </h4>
+                          <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Mentor Assigné</p>
+                        </div>
                     </div>
 
                     <div className="space-y-3 pt-4 border-t">
