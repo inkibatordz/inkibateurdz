@@ -205,45 +205,7 @@ const AdminDashboard: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* System Health Section - Glassmorphism */}
-            <Card className="border-0 shadow-xl rounded-[2.5rem] bg-gradient-to-br from-gray-900 via-slate-900 to-blue-900 text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[80px]"></div>
-              <CardContent className="p-10 relative z-10">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-3xl border border-white/20 shadow-2xl">
-                      <Mail className="w-10 h-10 text-blue-300" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-2xl font-black tracking-tighter mb-2">Santé du Système</h3>
-                      <p className="text-blue-100/60 text-sm font-medium leading-relaxed max-w-xs">
-                        Vérifiez l'état des services de notification et d'approbation des comptes.
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    className="w-full md:w-auto bg-white text-blue-900 hover:bg-blue-50 font-black rounded-2xl h-14 px-10 shadow-2xl transition-all hover:scale-105 active:scale-95"
-                    onClick={async () => {
-                      const email = prompt("Email de test :");
-                      if (!email) return;
-                      try {
-                        const res = await fetch('/api/test-email', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email })
-                        });
-                        const data = await res.json();
-                        if (data.success) alert("✅ Succès !");
-                        else alert("❌ Échec : " + data.message);
-                      } catch (e) { alert("❌ Erreur"); }
-                    }}
-                  >
-                    Lancer un Test
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Activity Feed - Elegant Sidebar style */}
