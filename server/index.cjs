@@ -749,6 +749,18 @@ app.put('/api/notifications/:id/read', async (req, res) => {
   }
 });
 
+app.put('/api/notifications/read-all', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ success: false, message: 'userId requis' });
+  try {
+    await safeQuery('UPDATE notifications SET is_read = true WHERE user_id = $1', [userId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error marking all notifications as read:', err.message);
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
 // --- Projects API ---
 app.get('/api/projects', async (req, res) => {
   const { studentId, mentorId } = req.query;

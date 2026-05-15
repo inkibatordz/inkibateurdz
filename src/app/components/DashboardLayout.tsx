@@ -119,6 +119,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
     navigate('/login', { replace: true });
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      const userId = role === 'admin' ? 'admin' : user?.id;
+      const res = await fetch('/api/notifications/read-all', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUnreadCount(0);
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        toast.success('Toutes les notifications sont marquées comme lues');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white/90 backdrop-blur-2xl border-r border-gray-100 safe-top safe-bottom">
       {/* Logo Section */}
@@ -248,10 +267,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel className="flex items-center justify-between">
-                  <span>Notifications</span>
-                  <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-0">{getNotificationCount()} nouvelles</Badge>
+              <DropdownMenuContent align="end" className="w-[400px] rounded-3xl shadow-2xl border-gray-100 p-2">
+                <DropdownMenuLabel className="flex items-center justify-between p-4">
+                  <span className="text-base font-black tracking-tight">Notifications</span>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-600 text-white border-0 font-bold text-[10px]">{unreadCount} nouvelles</Badge>
+                    {unreadCount > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 px-2"
+                        onClick={handleMarkAllAsRead}
+                      >
+                        Tout lire
+                      </Button>
+                    )}
+                  </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="max-h-80 overflow-y-auto">
