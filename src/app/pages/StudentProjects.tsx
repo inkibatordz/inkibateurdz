@@ -123,11 +123,11 @@ const StudentProjects: React.FC = () => {
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({
-          ...formData,
+        setFormData(prev => ({
+          ...prev,
           fileCtt: file.name,
           fileData: reader.result as string
-        });
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -163,8 +163,13 @@ const StudentProjects: React.FC = () => {
         const blob = new Blob(byteArrays, { type: contentType });
         const blobUrl = URL.createObjectURL(blob);
         
-        // Open in new tab to "see" it
-        window.open(blobUrl, '_blank');
+        // Open in new tab using a link to bypass some popup blockers
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
         // Optional: clean up blobUrl after a delay
         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
