@@ -82,6 +82,7 @@ const AdminProjects: React.FC = () => {
           .map((p: any) => ({
             ...p,
             studentName: p.student_first_name ? `${p.student_first_name} ${p.student_last_name || ''}` : 'Inconnu',
+            studentLabel: p.student_label || null,
             mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
             submittedDate: p.submitted_date || new Date().toISOString()
           }));
@@ -350,7 +351,14 @@ const AdminProjects: React.FC = () => {
                             </Badge>
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <span>Par {project.studentName}</span>
+                            <span className="flex items-center gap-2">
+                              Par {project.studentName}
+                              {(project as any).studentLabel && (
+                                <Badge className="bg-yellow-100 text-yellow-800 border-0 text-[10px] uppercase h-5">
+                                  {(project as any).studentLabel}
+                                </Badge>
+                              )}
+                            </span>
                             <span>•</span>
                             <span>Soumis le {new Date(project.submittedDate).toLocaleDateString('fr-FR')}</span>
                           </div>

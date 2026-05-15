@@ -49,6 +49,7 @@ const MentorProjects: React.FC = () => {
           .map((p: any) => ({
             ...p,
             studentName: p.student_first_name ? `${p.student_first_name} ${p.student_last_name || ''}` : 'Inconnu',
+            studentLabel: p.student_label || null,
             mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
             submittedDate: p.submitted_date || new Date().toISOString()
           }));
@@ -176,8 +177,13 @@ const MentorProjects: React.FC = () => {
                       </div>
                       <div>
                         <CardTitle className="text-xl">{project.title}</CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Étudiant : <strong>{(project as any).studentName || 'Inconnu'}</strong>
+                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                          <span>Étudiant : <strong>{(project as any).studentName || 'Inconnu'}</strong></span>
+                          {(project as any).studentLabel && (
+                            <Badge className="bg-yellow-100 text-yellow-800 border-0 text-[10px] uppercase">
+                              {(project as any).studentLabel}
+                            </Badge>
+                          )}
                         </p>
                       </div>
                     </div>

@@ -491,7 +491,8 @@ app.get('/api/users', async (req, res) => {
       level: user.level,
       studentId: user.student_id,
       status: user.status || 'pending',
-      approved: user.status === 'approved'
+      approved: user.status === 'approved',
+      label: user.label
     }));
     res.json({ success: true, users });
   } catch (err) {
@@ -754,7 +755,7 @@ app.get('/api/projects', async (req, res) => {
   try {
     let queryText = `
       SELECT p.*, 
-             u.first_name as student_first_name, u.last_name as student_last_name,
+             u.first_name as student_first_name, u.last_name as student_last_name, u.label as student_label,
              m.first_name as mentor_first_name, m.last_name as mentor_last_name
       FROM projects p 
       LEFT JOIN users u ON p.student_id = u.id
