@@ -268,14 +268,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
                   )}
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="text-center justify-center text-blue-600 cursor-pointer font-medium"
-                  onClick={() => {
-                    const path = navItems.find(i => i.label === 'Notifications')?.path;
-                    if (path) navigate(path);
-                  }}
-                >
-                  Voir toutes les notifications
+                <DropdownMenuItem asChild>
+                  <Link 
+                    to={navItems.find(i => i.label === 'Notifications')?.path || '/'}
+                    className="w-full flex items-center justify-center text-blue-600 cursor-pointer font-medium text-center"
+                  >
+                    Voir toutes les notifications
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -137,17 +137,41 @@ const StudentProjects: React.FC = () => {
       const res = await fetch(`/api/projects/${projectId}/file`);
       const data = await res.json();
       if (data.success && data.fileData) {
-        const link = document.createElement('a');
-        link.href = data.fileData;
-        link.download = data.fileCtt || fileName || 'document.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        let base64Data = data.fileData;
+        let contentType = 'application/pdf';
+        
+        if (base64Data.includes(';base64,')) {
+          const parts = base64Data.split(';base64,');
+          contentType = parts[0].split(':')[1];
+          base64Data = parts[1];
+        }
+
+        const byteCharacters = atob(base64Data);
+        const byteArrays = [];
+        
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+        }
+        
+        const blob = new Blob(byteArrays, { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Open in new tab to "see" it
+        window.open(blobUrl, '_blank');
+        
+        // Optional: clean up blobUrl after a delay
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
       } else {
         toast.error('Fichier non trouvé');
       }
     } catch (error) {
-      toast.error('Erreur lors du téléchargement');
+      toast.error('Erreur lors de l\\'ouverture du fichier');
     }
   };
 
