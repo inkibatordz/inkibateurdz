@@ -239,10 +239,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
             {/* Notifications Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="w-5 h-5" />
-                  {getNotificationCount() > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                <Button variant="ghost" size="icon" className="relative hover:bg-blue-50 rounded-full transition-colors">
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                      {unreadCount}
+                    </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -254,26 +256,38 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = React.memo(({ children }
                 <DropdownMenuSeparator />
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.length > 0 ? notifications.map(notif => (
-                    <div key={notif.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b ${!notif.is_read ? 'bg-blue-50/50' : ''}`}>
-                      <div className="flex items-start justify-between">
-                        <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                        {!notif.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>}
+                    <DropdownMenuItem 
+                      key={notif.id} 
+                      className={`p-4 cursor-pointer border-b last:border-0 focus:bg-blue-50/50 ${!notif.is_read ? 'bg-blue-50/30' : ''}`}
+                      onClick={() => navigate(`/${role}/notifications`)}
+                    >
+                      <div className="w-full">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-sm tracking-tight ${!notif.is_read ? 'font-black text-gray-900' : 'font-medium text-gray-600'}`}>{notif.title}</p>
+                          {!notif.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 shrink-0"></span>}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">
+                          {new Date(notif.created_at).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
-                    </div>
+                    </DropdownMenuItem>
                   )) : (
-                    <div className="p-4 text-center">
-                      <p className="text-sm text-gray-500">Aucune notification récente</p>
+                    <div className="p-10 text-center">
+                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Bell className="w-6 h-6 text-gray-300" />
+                      </div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Aucune notification</p>
                     </div>
                   )}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link 
-                    to={navItems.find(i => i.label === 'Notifications')?.path || '/'}
-                    className="w-full flex items-center justify-center text-blue-600 cursor-pointer font-medium text-center"
+                    to={`/${role}/notifications`}
+                    className="w-full flex items-center justify-center py-3 text-blue-600 hover:text-blue-700 cursor-pointer font-black text-[10px] uppercase tracking-[0.2em] text-center bg-gray-50/50"
                   >
-                    Voir toutes les notifications
+                    Voir tout l'historique
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
