@@ -141,6 +141,9 @@ const initDb = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='projects' AND column_name='mentor_feedback') THEN
           ALTER TABLE projects ADD COLUMN mentor_feedback TEXT;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='projects' AND column_name='type') THEN
+          ALTER TABLE projects ADD COLUMN type TEXT DEFAULT 'Label';
+        END IF;
       END $$;
     `);
 
@@ -766,7 +769,7 @@ app.get('/api/projects', async (req, res) => {
   const { studentId, mentorId } = req.query;
   try {
     let queryText = `
-      SELECT p.id, p.title, p.description, p.student_id, p.mentor_id, p.status, p.submitted_date, p.file_ctt, p.progress, p.mentor_feedback, 
+      SELECT p.id, p.title, p.description, p.student_id, p.mentor_id, p.status, p.submitted_date, p.file_ctt, p.progress, p.mentor_feedback, p.type, 
              u.first_name as student_first_name, u.last_name as student_last_name, u.label as student_label,
              m.first_name as mentor_first_name, m.last_name as mentor_last_name
       FROM projects p 
@@ -792,14 +795,14 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.post('/api/projects', async (req, res) => {
-  const { title, description, studentId, fileCtt, fileData } = req.body;
+  const { title, description, studentId, fileCtt, fileData, type } = req.body;
   const id = 'proj-' + Date.now();
   const submittedDate = new Date().toISOString();
   
   try {
     await safeQuery(
-      'INSERT INTO projects (id, title, description, student_id, status, submitted_date, file_ctt, file_data, progress) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)',
-      [id, title, description || 'Nouveau projet', studentId, 'pending', submittedDate, fileCtt || null, fileData || null]
+      'INSERT INTO projects (id, title, description, student_id, status, submitted_date, file_ctt, file_data, progress, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9)',
+      [id, title, description || 'Nouveau projet', studentId, 'pending', submittedDate, fileCtt || null, fileData || null, type || 'Label']
     );
 
     // Notify Admin

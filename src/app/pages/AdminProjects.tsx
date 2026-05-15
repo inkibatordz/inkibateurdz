@@ -11,7 +11,8 @@ import {
   Search,
   FileText,
   Download,
-  Trash2
+  Trash2,
+  Tag
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -35,6 +36,7 @@ interface Project {
   mentorId?: string;
   mentorName?: string;
   title: string;
+  type?: string;
   fileCtt?: string;
   status: 'pending' | 'accepted' | 'incubation' | 'rejected';
   submittedDate: string;
@@ -85,7 +87,8 @@ const AdminProjects: React.FC = () => {
             studentLabel: p.student_label || null,
             mentorName: p.mentor_id ? `${p.mentor_first_name || ''} ${p.mentor_last_name || ''}` : 'Non assigné',
             submittedDate: p.submitted_date || new Date().toISOString(),
-            fileCtt: p.file_ctt || p.fileCtt
+            fileCtt: p.file_ctt || p.fileCtt,
+            type: p.type
           }));
         setProjects(mappedProjects);
       }
@@ -355,6 +358,12 @@ const AdminProjects: React.FC = () => {
                             <Badge className={getStatusColor(project.status)}>
                               {getStatusLabel(project.status)}
                             </Badge>
+                            {project.type && (
+                              <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-bold flex items-center gap-1 h-6">
+                                <Tag className="w-3 h-3" />
+                                {project.type}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
                             <span className="flex items-center gap-2">

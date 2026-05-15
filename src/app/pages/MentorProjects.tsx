@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { FolderKanban, FileText, Download, Calendar as CalendarIcon, MessageSquare } from 'lucide-react';
+import { FolderKanban, FileText, Download, Calendar as CalendarIcon, MessageSquare, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ interface Project {
   studentId: string;
   mentorId?: string;
   title: string;
+  type?: string;
   fileCtt?: string;
   status: 'pending' | 'accepted' | 'incubation' | 'rejected';
   submittedDate: string;
@@ -193,7 +194,15 @@ const MentorProjects: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    {getStatusBadge(project.status)}
+                    <div className="flex flex-col gap-2 items-end">
+                      {getStatusBadge(project.status)}
+                      {project.type && (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-bold flex items-center gap-1 h-6">
+                          <Tag className="w-3 h-3" />
+                          {project.type}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">

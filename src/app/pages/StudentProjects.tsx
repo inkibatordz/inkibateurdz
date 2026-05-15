@@ -8,7 +8,14 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Progress } from '../components/ui/progress';
-import { FolderKanban, Plus, Upload, FileText, Download, Calendar as CalendarIcon, MessageCircle, MessageSquare } from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '../components/ui/select';
+import { FolderKanban, Plus, Upload, FileText, Download, Calendar as CalendarIcon, MessageCircle, MessageSquare, Tag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import ChatRoom from '../components/ChatRoom';
@@ -23,6 +30,7 @@ interface Project {
   mentorFeedback?: string;
   meetingSchedule?: { date: string, organizer: string };
   progress: number;
+  type?: 'Label' | 'PME' | 'Brevet';
 }
 
 const StudentProjects: React.FC = () => {
@@ -32,7 +40,8 @@ const StudentProjects: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     fileCtt: '',
-    fileData: ''
+    fileData: '',
+    type: 'Label'
   });
 
   useEffect(() => {
@@ -69,7 +78,8 @@ const StudentProjects: React.FC = () => {
       studentId: user?.id,
       description: 'Nouveau projet soumis via la plateforme', // Default description
       fileCtt: formData.fileCtt,
-      fileData: formData.fileData
+      fileData: formData.fileData,
+      type: formData.type
     };
 
     try {
@@ -82,7 +92,7 @@ const StudentProjects: React.FC = () => {
       if (data.success) {
         toast.success('Projet soumis avec succès !');
         setIsDialogOpen(false);
-        setFormData({ title: '', fileCtt: '', fileData: '' });
+        setFormData({ title: '', fileCtt: '', fileData: '', type: 'Label' });
         loadProjects();
       } else {
         toast.error(data.message || 'Erreur lors de la soumission');
@@ -213,6 +223,24 @@ const StudentProjects: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="type">Type de projet</Label>
+                  <Select 
+                    value={formData.type} 
+                    onValueChange={(val) => setFormData({ ...formData, type: val })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sélectionnez le type de projet" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Label">Label (Projet Innovant)</SelectItem>
+                      <SelectItem value="PME">PME (Petite/Moyenne Entreprise)</SelectItem>
+                      <SelectItem value="Brevet">Brevet (Invention)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-gray-500 font-medium">Choisissez le parcours de votre projet (Arrêté 1275)</p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="fileCtt">Cahier des charges / Fichier CTT</Label>
                   <div className="flex items-center space-x-2">
                     <Input
@@ -263,9 +291,17 @@ const StudentProjects: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(project.status)}>
-                      {getStatusLabel(project.status)}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge className={getStatusColor(project.status)}>
+                        {getStatusLabel(project.status)}
+                      </Badge>
+                      {project.type && (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-bold flex items-center gap-1">
+                          <Tag className="w-3 h-3" />
+                          {project.type}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
