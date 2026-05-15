@@ -754,7 +754,7 @@ app.get('/api/projects', async (req, res) => {
   const { studentId, mentorId } = req.query;
   try {
     let queryText = `
-      SELECT p.*, 
+      SELECT p.id, p.title, p.description, p.student_id, p.mentor_id, p.status, p.submitted_date, p.file_ctt, p.progress, p.mentor_feedback, 
              u.first_name as student_first_name, u.last_name as student_last_name, u.label as student_label,
              m.first_name as mentor_first_name, m.last_name as mentor_last_name
       FROM projects p 
