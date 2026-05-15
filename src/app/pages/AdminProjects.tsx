@@ -219,7 +219,7 @@ const AdminProjects: React.FC = () => {
         toast.error('Fichier non trouvé');
       }
     } catch (error) {
-      toast.error('Erreur lors de l\\'ouverture du fichier');
+      toast.error("Erreur lors de l'ouverture du fichier");
     }
   };
 
